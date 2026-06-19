@@ -23,26 +23,25 @@
         }
         
         body { 
-    background-image: url("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSPFDgrwRHjbVD_Nl2JOmBWqz6hX457GV0IMJ6j2isnXOXOOO2EMhH0W0&s=10");
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
+    background-color: var(--bg-color); 
     color: var(--text-color); 
     font-family: 'Segoe UI', Arial, sans-serif; 
     margin: 0; padding: 0; 
     display: flex; flex-direction: column; align-items: center;
     min-height: 100vh;
         }
-        
 
         /* CARTEL DE REEMPLAZO PARA EL BANNER */
         .header-banner {
-            width: 100%; max-width: 1100px; padding: 30px 0;
-            background-color: var(--blue-church); color: white; text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15); border-bottom: 5px solid var(--accent-color);
-            margin-bottom: 20px; border-radius: 0 0 12px 12px;
+    width: 100%; max-width: 1100px; padding: 45px 0; /* Le di un poco más de alto para que luzca la foto */
+    background-image: linear-gradient(rgba(26, 54, 93, 0.75), rgba(26, 54, 93, 0.75)), url("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSPFDgrwRHjbVD_Nl2JOmBWqz6hX457GV0IMJ6j2isnXOXOOO2EMhH0W0&s=10");
+    background-size: cover;
+    background-position: center;
+    color: white; text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15); border-bottom: 5px solid var(--accent-color);
+    margin-bottom: 20px; border-radius: 0 0 12px 12px;
         }
+        
         .header-banner h1 { margin: 0; font-size: 32px; text-transform: uppercase; letter-spacing: 1px; }
         .header-banner p { margin: 5px 0 0 0; opacity: 0.8; font-size: 14px; }
 
