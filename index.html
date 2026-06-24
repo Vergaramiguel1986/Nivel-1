@@ -4,179 +4,124 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CCI - Asistencia Nivel 1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <style>
-        :root { 
-            --bg-color: #f4f6f9; 
-            --card-bg: #ffffff; 
-            --text-color: #2c3e50; 
-            --accent-color: #bc2d87; 
-            --blue-church: #1a365d; 
-            --danger-color: #e74c3c; 
-            --success-color: #2ecc71;
-            --excel-color: #1f7244;
-            --pdf-color: #c0392b;
-            --warning-color: #f39c12;
-        }
-        
-        body { 
-    background-color: var(--bg-color); 
-    color: var(--text-color); 
-    font-family: 'Segoe UI', Arial, sans-serif; 
-    margin: 0; padding: 0; 
-    display: flex; flex-direction: column; align-items: center;
-    min-height: 100vh;
-        }
-
-        /* CARTEL DE REEMPLAZO PARA EL BANNER */
-        .header-banner {
-    width: 100%; max-width: 1100px; padding: 45px 0; /* Le di un poco más de alto para que luzca la foto */
-    background-image: linear-gradient(rgba(26, 54, 93, 0.75), rgba(26, 54, 93, 0.75)), url("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSPFDgrwRHjbVD_Nl2JOmBWqz6hX457GV0IMJ6j2isnXOXOOO2EMhH0W0&s=10");
-    background-size: cover;
-    background-position: center;
-    color: white; text-align: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.15); border-bottom: 5px solid var(--accent-color);
-    margin-bottom: 20px; border-radius: 0 0 12px 12px;
-        }
-        
-        .header-banner h1 { margin: 0; font-size: 32px; text-transform: uppercase; letter-spacing: 1px; }
-        .header-banner p { margin: 5px 0 0 0; opacity: 0.8; font-size: 14px; }
-
-        .container { max-width: 1100px; width: 95%; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px; }
-        @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
-        
-        .card { background: var(--card-bg); border-radius: 12px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: flex; flex-direction: column; }
-        
-        h2 { margin-top: 0; border-bottom: 2px solid #edf2f7; padding-bottom: 10px; color: var(--blue-church); font-size: 20px; }
-        
-        #reader { width: 100%; max-width: 320px; margin: 15px auto; border: none !important; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        #reader__camera_selection, #reader__dashboard_section_swaplink { display: none !important; }
-        
-        .form-group { margin-bottom: 12px; display: flex; flex-direction: column; text-align: left; }
-        label { margin-bottom: 6px; font-size: 14px; font-weight: 600; color: #4a5568; }
-        input { padding: 11px; background: #f8fafc; border: 1px solid #cbd5e1; color: var(--text-color); border-radius: 6px; font-size: 14px; }
-        input:focus { border-color: var(--accent-color); outline: none; }
-        
-        button { background: var(--blue-church); color: white; border: none; padding: 13px 20px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 10px; font-size: 15px; }
-        
-        .download-actions { display: flex; gap: 10px; margin-top: 10px; margin-bottom: 15px; justify-content: flex-start; }
-        .btn-excel { background-color: var(--excel-color); width: auto; padding: 10px 15px; font-size: 13px; }
-        .btn-pdf { background-color: var(--pdf-color); width: auto; padding: 10px 15px; font-size: 13px; }
-
-        #qr-result-box { display: none; margin-top: 15px; padding: 15px; border: 2px dashed var(--accent-color); border-radius: 8px; background: #fff5fa; text-align: center; align-items: center; flex-direction: column; }
-        #qrcode { margin: 10px auto; padding: 10px; background: white; border-radius: 6px; }
-
-        #status { font-weight: bold; padding: 14px; border-radius: 8px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center; margin-bottom: 20px; width: 95%; max-width: 1050px; border-left: 5px solid var(--accent-color); }
-        
-        #notification-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
-        .vineta { padding: 15px 20px; border-radius: 8px; color: white; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 260px; animation: slideIn 0.3s ease forwards; display: flex; align-items: center; justify-content: space-between; }
-        .vineta-success { background-color: var(--success-color); border-left: 6px solid #196f3d; }
-        .vineta-error { background-color: var(--danger-color); border-left: 6px solid #922b21; }
-        .vineta-warning { background-color: var(--warning-color); border-left: 6px solid #b7791f; }
-        
-        .table-container { grid-column: 1 / -1; background: var(--card-bg); padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        .pdf-export-area { background: var(--card-bg); width: 100%; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-        th { background-color: #f8fafc; color: var(--blue-church); }
-        
-        .badge { padding: 5px 10px; border-radius: 6px; font-weight: bold; font-size: 11px; text-transform: uppercase; }
-        .badge-presente { background: #e8f8f5; color: #117a65; }
-        .badge-ausente { background: #fadbd8; color: #78281f; }
-        
-        .btn-row-delete { background-color: var(--danger-color); padding: 5px 8px; font-size: 11px; width: auto; margin: 0; }
-
-        .admin-panel { display: flex; gap: 15px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
-        .btn-admin { max-width: 250px; margin-top: 0; }
-        .btn-undo { background-color: var(--warning-color); display: none; }
-
-        @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    </style>
 </head>
-<body>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col items-center antialiased">
 
-    <div id="notification-container"></div>
-    <div class="header-banner">
-        <h1>Nivel 1</h1>
-        <p>CCI - Control de Asistencia y Padrón de Alumnos</p>
+    <div id="notification-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3.5"></div>
+
+        <div class="w-full max-w-5xl py-12 px-4 rounded-b-2xl shadow-lg border-b-4 border-pink-600 text-center relative overflow-hidden mb-6"
+         style="background-image: linear-gradient(rgba(26, 54, 93, 0.82), rgba(26, 54, 93, 0.82)), url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSPFDgrwRHjbVD_Nl2JOmBWqz6hX457GV0IMJ6j2isnXOXOOO2EMhH0W0&s=10'); background-size: cover; background-position: center;">
+        <h1 class="m-0 text-3xl md:text-4xl font-extrabold text-white uppercase tracking-wider drop-shadow-sm">Nivel 1</h1>
+        <p class="m-0 mt-2 text-slate-200 text-sm md:text-base font-medium opacity-90">CCI - Control de Asistencia y Padrón de Alumnos</p>
     </div>
-    <div id="status">INICIALIZANDO...</div>
 
-    <div class="container">
+    <div id="status" class="w-[95%] max-w-5xl bg-white border-l-4 border-pink-600 rounded-r-xl shadow-sm p-4 text-center font-bold text-sm tracking-wide text-slate-700 mb-6 uppercase transition-all duration-300">
+        INICIALIZANDO...
+    </div>
+
+    <div class="w-[95%] max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
         
-        <div class="card">
-            <h2>Escáner de Credenciales QR</h2>
-            <p style="font-size: 13px; color: #7f8c8d; margin-top: -5px;">Habilitado solo en días y horarios de clase.</p>
-            <div id="reader"></div>
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col transition hover:shadow-md">
+            <h2 class="text-xl font-bold text-slate-800 border-b border-slate-100 pb-3 mb-2 flex items-center gap-2">
+                📸 Escáner de Credenciales QR
+            </h2>
+            <p class="text-xs text-slate-400 mb-4">Habilitado solo en días y horarios de clase.</p>
+            <div id="reader" class="w-full max-w-[320px] mx-auto rounded-xl overflow-hidden shadow-inner !border-0"></div>
         </div>
 
-        <div class="card">
-            <h2>Registrar y Crear QR Único</h2>
-            <p style="font-size: 13px; color: #7f8c8d; margin-top: -5px;">Padrón controlado de alumnos con descarga de credencial.</p>
-            <form id="form-registro" onsubmit="return false;">
-                <div class="form-group">
-                    <label>DNI (7 u 8 dígitos):</label>
-                    <input type="text" id="reg-dni" required placeholder="Ej: 46123456" autocomplete="off">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col transition hover:shadow-md">
+            <h2 class="text-xl font-bold text-slate-800 border-b border-slate-100 pb-3 mb-2 flex items-center gap-2">
+                👤 Registrar y Crear QR Único
+            </h2>
+            <p class="text-xs text-slate-400 mb-4">Padrón controlado de alumnos con descarga de credencial.</p>
+            
+            <form id="form-registro" class="space-y-4" onsubmit="return false;">
+                <div class="flex flex-col">
+                    <label class="text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">DNI (7 u 8 dígitos):</label>
+                    <input type="text" id="reg-dni" required placeholder="Ej: 46123456" autocomplete="off"
+                           class="p-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-sm focus:border-pink-500 focus:ring-2 focus:ring-pink-100 focus:outline-none transition-all">
                 </div>
-                <div class="form-group">
-                    <label>Nombre(s):</label>
-                    <input type="text" id="reg-nombre" required placeholder="Ej: Juan">
+                <div class="flex flex-col">
+                    <label class="text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Nombre(s):</label>
+                    <input type="text" id="reg-nombre" required placeholder="Ej: Juan"
+                           class="p-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-sm focus:border-pink-500 focus:ring-2 focus:ring-pink-100 focus:outline-none transition-all">
                 </div>
-                <div class="form-group">
-                    <label>Apellido(s):</label>
-                    <input type="text" id="reg-apellido" required placeholder="Ej: Pérez">
+                <div class="flex flex-col">
+                    <label class="text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Apellido(s):</label>
+                    <input type="text" id="reg-apellido" required placeholder="Ej: Pérez"
+                           class="p-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-sm focus:border-pink-500 focus:ring-2 focus:ring-pink-100 focus:outline-none transition-all">
                 </div>
-                <button type="button" id="btn-registrar-alumno" style="background-color: var(--accent-color);">Registrar Alumno y Generar QR</button>
+                <button type="button" id="btn-registrar-alumno" 
+                        class="w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-lg shadow-sm hover:shadow transition-all transform active:scale-[0.99] mt-2 text-sm uppercase tracking-wide">
+                    Registrar Alumno y Generar QR
+                </button>
             </form>
 
-            <div id="qr-result-box">
-                <span style="font-weight: bold; color: var(--blue-church); font-size: 14px;">¡QR CREADO CON ÉXITO!</span>
-                <div id="qrcode"></div>
-                <span id="qr-label" style="font-size: 12px; font-weight: bold; margin-bottom: 8px; display: block;"></span>
-                <button type="button" id="btn-descargar-qr" style="background-color: #2c3e50; padding: 8px 12px; font-size: 12px;">📥 Descargar Imagen QR</button>
+            <div id="qr-result-box" class="hidden mt-5 p-5 border-2 border-dashed border-pink-300 rounded-xl bg-pink-50/40 text-center flex-col items-center">
+                <span class="font-extrabold text-slate-700 text-xs tracking-wider uppercase mb-3">¡Credencial generada con éxito!</span>
+                <div id="qrcode" class="mx-auto p-3 bg-white rounded-xl shadow-sm border border-slate-100"></div>
+                <span id="qr-label" class="text-xs font-bold text-slate-700 mt-3 mb-4 px-2 py-1 bg-white rounded-md border border-slate-200 shadow-sm"></span>
+                <button type="button" id="btn-descargar-qr" 
+                        class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold py-2.5 px-4 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm transform active:scale-[0.98]">
+                    📥 Descargar Imagen QR
+                </button>
             </div>
         </div>
 
-        <div class="table-container">
-            <div id="area-impresion-pdf" class="pdf-export-area">
-                <h2 style="margin-bottom: 5px;">Planilla de Control y Asistencia General - NIVEL 1</h2>
-                <p style="font-size: 13px; color: #7f8c8d; margin-top: 0; margin-bottom: 20px;">Límite estricto: la tercera falta genera la baja inmediata del sistema.</p>
+        <div class="md:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-100 overflow-hidden">
+            <div id="area-impresion-pdf" class="w-full bg-white">
+                <h2 class="text-xl font-bold text-slate-800 mb-1">Planilla de Control y Asistencia General - NIVEL 1</h2>
+                <p class="text-xs text-slate-400 mb-5">Límite estricto: la tercera falta genera la baja inmediata del sistema.</p>
                 
-                <div class="download-actions">
-                    <button class="btn-excel" id="btn-exportar-excel">🟢 Descargar Excel (.xlsx)</button>
-                    <button class="btn-pdf" id="btn-exportar-pdf">🔴 Descargar Reporte PDF (.pdf)</button>
+                <div class="flex flex-wrap gap-3 mb-6 download-actions">
+                    <button class="bg-[#1f7244] hover:bg-[#165230] text-white font-bold py-2.5 px-4 rounded-lg text-xs transition-colors flex items-center gap-1.5 shadow-sm transform active:scale-[0.98]" id="btn-exportar-excel">
+                        🟢 Descargar Excel (.xlsx)
+                    </button>
+                    <button class="bg-[#c0392b] hover:bg-[#962d22] text-white font-bold py-2.5 px-4 rounded-lg text-xs transition-colors flex items-center gap-1.5 shadow-sm transform active:scale-[0.98]" id="btn-exportar-pdf">
+                        🔴 Descargar Reporte PDF (.pdf)
+                    </button>
                 </div>
 
-                <table id="tabla-asistencia">
-                    <thead>
-                        <tr>
-                            <th>Alumno</th>
-                            <th>DNI</th>
-                            <th>Faltas</th>
-                            <th>Estado Actual</th>
-                            <th class="no-export">Acción Directa</th>
-                            <th class="no-export">Eliminar</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cuerpo-tabla"></tbody>
-                </table>
+                <div class="overflow-x-auto rounded-xl border border-slate-100">
+                    <table id="tabla-asistencia" class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-600 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                                <th class="p-4">Alumno</th>
+                                <th class="p-4">DNI</th>
+                                <th class="p-4 text-center">Faltas</th>
+                                <th class="p-4">Estado Actual</th>
+                                <th class="p-4 no-export">Acción Directa</th>
+                                <th class="p-4 no-export text-center">Eliminar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpo-tabla" class="text-sm divide-y divide-slate-100 text-slate-700"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <div class="table-container" style="border: 2px dashed var(--danger-color); margin-top: 10px;">
-            <h2 style="color: var(--danger-color); border-bottom-color: #fcedeb;">Administración General de la Aplicación</h2>
-            <p style="font-size: 13px; color: #7f8c8d; margin-top: -5px;">Gestione errores de captura o prepare el nuevo ciclo anual.</p>
-            <div class="admin-panel">
-                <button id="btn-deshacer" onclick="deshacerUltimaAccion()" class="btn-admin btn-undo">↩️ Deshacer Último Cambio</button>
-                <button onclick="reiniciarSistema()" style="background-color: var(--danger-color);" class="btn-admin">⚠️ REINICIAR SISTEMA (Borrar todo)</button>
+        <div class="md:col-span-2 bg-white rounded-2xl p-6 shadow-sm border-2 border-dashed border-red-200 mt-4">
+            <h2 class="text-lg font-bold text-red-600 border-b border-red-50 pb-2.5 mb-1">Administración General de la Aplicación</h2>
+            <p class="text-xs text-slate-400 mb-5">Gestione errores de captura o prepare el nuevo ciclo anual.</p>
+            <div class="flex flex-wrap gap-4 items-center">
+                <button id="btn-deshacer" onclick="deshacerUltimaAccion()" 
+                        class="hidden bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 px-5 rounded-lg text-xs tracking-wide shadow-sm transition-colors transform active:scale-[0.98]">
+                    ↩️ Deshacer Último Cambio
+                </button>
+                <button onclick="reiniciarSistema()" 
+                        class="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-5 rounded-lg text-xs tracking-wide shadow-sm transition-colors transform active:scale-[0.98]">
+                    ⚠️ REINICIAR SISTEMA (Borrar todo)
+                </button>
             </div>
         </div>
     </div>
 
-    <script {nonce}>
+    <script>
         const statusText = document.getElementById('status');
         const regDni = document.getElementById('reg-dni');
         const regNombre = document.getElementById('reg-nombre');
@@ -198,8 +143,6 @@
         let html5QrcodeScanner = null;
         let ultimoQrEscaneado = "";
         let tiempoBloqueo = 0;
-
-        // Historial para la función deshacer (guarda una foto del estado anterior)
         let historialRespaldo = null;
 
         function guardarHistorial() {
@@ -207,20 +150,17 @@
                 alumnos: JSON.parse(JSON.stringify(alumnos)),
                 excluidosAnuales: JSON.parse(JSON.stringify(excluidosAnuales))
             };
-            btnDeshacer.style.display = "block";
+            btnDeshacer.classList.remove('hidden');
         }
 
         function deshacerUltimaAccion() {
             if (historialRespaldo) {
                 alumnos = historialRespaldo.alumnos;
                 excluidosAnuales = historialRespaldo.excluidosAnuales;
-                
-                localStorage.setItem('asistencia_qr_church_n1', JSON.stringify(alumnos));
-                localStorage.setItem('excluidos_anual_n1', JSON.stringify(excluidosAnuales));
-                
+                localStorage.setItem('asistencia_qr_church', JSON.stringify(alumnos));
+                localStorage.setItem('excluidos_anual', JSON.stringify(excluidosAnuales));
                 historialRespaldo = null;
-                btnDeshacer.style.display = "none";
-                
+                btnDeshacer.classList.add('hidden');
                 actualizarTabla();
                 reproducirSonido('success');
                 mostrarViñeta("Cambio deshecho con éxito.", "warning");
@@ -234,27 +174,91 @@
             const minutosActual = ahora.getMinutes();
             const tiempoEnMinutos = (horaActual * 60) + minutosActual;
 
-            if (diaSemana === 5) {
-                const inicioViernes = (1 * 60) + 15;
-                const finViernes = (22 * 60);
-                return (tiempoEnMinutos >= inicioViernes && tiempoEnMinutos <= finViernes);
+            if (diaSemana === 5) { // Viernes
+                return (tiempoEnMinutos >= 60 && tiempoEnMinutos <= 1380); // 1:00 AM a 11:00 PM
             }
-
-            if (diaSemana === 0) {
-                const inicioDomingo = (9 * 60);
-                const finDomingo = (22 * 60) + 30;
-                return (tiempoEnMinutos >= inicioDomingo && tiempoEnMinutos <= finDomingo);
+            if (diaSemana === 0) { // Domingo
+                return (tiempoEnMinutos >= 540 && tiempoEnMinutos <= 1350); // 9:00 AM a 10:30 PM
             }
-
             return false;
+        }
+
+        // Obtener identificador único del bloque de clase actual basado en la fecha
+        function obtenerIdClaseActual() {
+            const ahora = new Date();
+            const diaSemana = ahora.getDay();
+            // Formato AAAAMMDD para marcar el día de la clase
+            const fechaStr = ahora.getFullYear() + String(ahora.getMonth() + 1).padStart(2, '0') + String(ahora.getDate()).padStart(2, '0');
+            
+            if (diaSemana === 5 && esHorarioHabilitado()) {
+                return "VIERNES_" + fechaStr;
+            }
+            if (diaSemana === 0 && esHorarioHabilitado()) {
+                return "DOMINGO_" + fechaStr;
+            }
+            return null;
+        }
+
+        // FUNCIÓN CLAVE: Procesa el cierre automático de la clase anterior si cambió el ciclo
+        function procesarCierreClaseAutomatico() {
+            const claseActualId = obtenerIdClaseActual();
+            if (!claseActualId) return; // Si no estamos en horario de clase activa, no cerramos nada
+
+            const ultimaClaseRegistrada = localStorage.getItem('ultima_clase_id');
+
+            // Si es un día de clase nuevo diferente al último guardado
+            if (ultimaClaseRegistrada && ultimaClaseRegistrada !== claseActualId) {
+                let cambiosEfectuados = false;
+                let alumnosParaDarDeBaja = [];
+
+                // Recorremos el padrón y sumamos falta a los que se quedaron "Ausente" la clase pasada
+                alumnos.forEach((alumno) => {
+                    if (alumno.estado === "Ausente") {
+                        alumno.faltas += 1;
+                        cambiosEfectuados = true;
+                        
+                        if (alumno.faltas >= 3) {
+                            alumnosParaDarDeBaja.push(alumno.dni);
+                        }
+                    }
+                });
+
+                // Procesamos las bajas automáticas acumuladas si las hay
+                if (alumnosParaDarDeBaja.length > 0) {
+                    alumnosParaDarDeBaja.forEach(dni => {
+                        if (!excluidosAnuales.includes(dni)) {
+                            excluidosAnuales.push(dni);
+                        }
+                        const index = alumnos.findIndex(a => a.dni === dni);
+                        if (index !== -1) alumnos.splice(index, 1);
+                    });
+                    localStorage.setItem('excluidos_anual', JSON.stringify(excluidosAnuales));
+                    alert(`AVISO DE SISTEMA:\nSe han procesado bajas automáticas por acumular 3 faltas en la clase anterior.`);
+                }
+
+                // Reseteamos el estado de TODOS a "Ausente" para la nueva jornada que arranca
+                alumnos.forEach(alumno => alumno.estado = "Ausente");
+
+                if (cambiosEfectuados) {
+                    localStorage.setItem('asistencia_qr_church', JSON.stringify(alumnos));
+                    mostrarViñeta("Cierre automático: Se computaron las faltas de la clase anterior.", "warning");
+                }
+            }
+
+            // Actualizamos el registro con el ID de la clase de hoy
+            localStorage.setItem('ultima_clase_id', claseActualId);
         }
 
         function mostrarViñeta(mensaje, tipo = 'success') {
             const vineta = document.createElement('div');
-            vineta.className = `vineta vineta-${tipo}`;
-            vineta.innerHTML = `<span>${mensaje}</span><strong style="margin-left:10px;cursor:pointer;" onclick="this.parentElement.remove()">×</strong>`;
+            let clasesTipo = "bg-emerald-500 border-emerald-700";
+            if(tipo === 'error') clasesTipo = "bg-red-500 border-red-700";
+            if(tipo === 'warning') clasesTipo = "bg-amber-500 border-amber-700";
+
+            vineta.className = `p-4 rounded-xl color-white text-white font-bold shadow-lg min-w-[280px] border-l-4 flex items-center justify-between transition-all duration-300 ${clasesTipo}`;
+            vineta.innerHTML = `<span>${mensaje}</span><strong class="ml-3 cursor-pointer opacity-70 hover:opacity-100" onclick="this.parentElement.remove()">×</strong>`;
             notifContainer.appendChild(vineta);
-            setTimeout(() => { vineta.remove(); }, 4000);
+            setTimeout(() => { vineta.remove(); }, 5000);
         }
 
         function reproducirSonido(tipo) {
@@ -263,22 +267,20 @@
                 const osc = ctx.createOscillator(); const gain = ctx.createGain();
                 osc.connect(gain); gain.connect(ctx.destination);
                 osc.frequency.setValueAtTime(tipo === 'success' ? 880 : 220, ctx.currentTime);
-                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.setValueAtTime(0.08, ctx.currentTime);
                 osc.start(); osc.stop(ctx.currentTime + 0.15);
             } catch (e) {}
         }
 
         function inicializar() {
-            const guardados = localStorage.getItem('asistencia_qr_church_n1');
-            if (guardados) {
-                try { alumnos = JSON.parse(guardados); } catch (e) { alumnos = []; }
-            }
+            const guardados = localStorage.getItem('asistencia_qr_church');
+            if (guardados) { try { alumnos = JSON.parse(guardados); } catch (e) { alumnos = []; } }
 
-            const bloqueados = localStorage.getItem('excluidos_anual_n1');
-            if (bloqueados) {
-                try { excluidosAnuales = JSON.parse(bloqueados); } catch (e) { excluidosAnuales = []; }
-            }
+            const bloqueados = localStorage.getItem('excluidos_anual');
+            if (bloqueados) { try { excluidosAnuales = JSON.parse(bloqueados); } catch (e) { excluidosAnuales = []; } }
 
+            // Ejecutamos el control automático de faltas retroactivas al abrir la app
+            procesarCierreClaseAutomatico();
             actualizarTabla();
 
             html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
@@ -308,12 +310,24 @@
             let alumno = alumnos.find(a => a.dni === decodedText.trim());
 
             if (alumno) {
-                guardarHistorial(); // Respaldar antes de cambiar la asistencia
+                if (alumno.estado === "Presente") {
+                    reproducirSonido('error');
+                    mostrarViñeta(`ALERTA: ${alumno.apellido} YA MARCO PRESENTE HOY.`, "warning");
+                    statusText.innerText = `⚠️ INTENTO DE DUPLICADO: ${alumno.apellido} ya está registrado.`;
+                    return;
+                }
+
+                guardarHistorial();
                 alumno.estado = "Presente";
                 reproducirSonido('success');
                 mostrarViñeta(`¡PRESENTE! ${alumno.apellido}, ${alumno.nombre}`, "success");
                 statusText.innerText = `Último QR Leído: ${alumno.apellido} marcó asistencia.`;
-                localStorage.setItem('asistencia_qr_church_n1', JSON.stringify(alumnos));
+                localStorage.setItem('asistencia_qr_church', JSON.stringify(alumnos));
+                
+                // Asegurar que quede guardado el ID de la clase actual tras un escaneo exitoso
+                const claseId = obtenerIdClaseActual();
+                if(claseId) localStorage.setItem('ultima_clase_id', claseId);
+                
                 actualizarTabla();
             } else {
                 reproducirSonido('error');
@@ -334,23 +348,17 @@
                 mostrarViñeta("El DNI debe tener obligatoriamente 7 u 8 números.", "error");
                 return;
             }
-
             if (excluidosAnuales.includes(dniVal)) {
                 reproducirSonido('error');
-                mostrarViñeta("ERROR: DNI bloqueado por exceso de faltas hasta el próximo año.", "error");
-                return;
-            }
-
-            if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nomVal) || !/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(apeVal)) {
-                mostrarViñeta("El Nombre y Apellido solo aceptan letras.", "error");
+                mostrarViñeta("ERROR: DNI bloqueado por exceso de faltas.", "error");
                 return;
             }
             if (alumnos.some(a => a.dni === dniVal)) {
-                mostrarViñeta("Ese número de DNI ya está cargado en el sistema.", "error");
+                mostrarViñeta("Ese número de DNI ya está cargado.", "error");
                 return;
             }
 
-            guardarHistorial(); // Respaldar antes de agregar uno nuevo
+            guardarHistorial();
 
             alumnos.push({
                 apellido: apeVal,
@@ -360,10 +368,10 @@
                 estado: "Ausente"
             });
 
-            localStorage.setItem('asistencia_qr_church_n1', JSON.stringify(alumnos));
+            localStorage.setItem('asistencia_qr_church', JSON.stringify(alumnos));
             actualizarTabla();
             reproducirSonido('success');
-            mostrarViñeta(`Registrado con éxito. Generando credencial...`, "success");
+            mostrarViñeta(`Registrado con éxito. Creando credencial...`, "success");
 
             qrcodeDiv.innerHTML = ""; 
             new QRCode(qrcodeDiv, {
@@ -376,7 +384,8 @@
             });
 
             qrLabel.innerText = `${apeVal.toUpperCase()}, ${nomVal} - DNI ${dniVal}`;
-            qrResultBox.style.display = "flex";
+            qrResultBox.classList.remove('hidden');
+            qrResultBox.classList.add('flex');
             document.getElementById('form-registro').reset();
         });
 
@@ -390,16 +399,14 @@
             }
         });
 
-        btnExportarExcel.addEventListener('click', () => {
+        btnExportarExcel.addEventListener('click', async () => {
             if (alumnos.length === 0) {
                 mostrarViñeta("No hay alumnos cargados para exportar.", "error");
                 return;
             }
 
             const matrizDatos = [
-                ["CLASE: NIVEL 1"], 
-                [], 
-                ["Apellido", "Nombre", "DNI", "Faltas", "Estado Actual"]
+                ["CLASE: NIVEL 1"], [], ["Apellido", "Nombre", "DNI", "Faltas", "Estado Actual"]
             ];
 
             alumnos.forEach(a => {
@@ -412,50 +419,72 @@
 
             XLSX.utils.book_append_sheet(libro, hoja, "Asistencia N1");
             const fecha = new Date().toISOString().slice(0,10);
-            XLSX.writeFile(libro, `Asistencia_NIVEL_1_${fecha}.xlsx`);
-            mostrarViñeta("Planilla Excel Nivel 1 descargada.", "success");
+            const nombreArchivo = `Asistencia_NIVEL_1_${fecha}.xlsx`;
+
+            const excelBuffer = XLSX.write(libro, { bookType: 'xlsx', type: 'array' });
+            const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const archivo = new File([data], nombreArchivo, { type: data.type });
+
+            if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+                try {
+                    await navigator.share({ files: [archivo], title: 'Asistencia Nivel 1', text: 'Planilla de asistencia.' });
+                    mostrarViñeta("Reporte compartido.", "success");
+                } catch (error) {}
+            } else {
+                XLSX.writeFile(libro, nombreArchivo);
+            }
         });
 
-        btnExportarPdf.addEventListener('click', () => {
+        btnExportarPdf.addEventListener('click', async () => {
             if (alumnos.length === 0) {
-                mostrarViñeta("No hay alumnos en la planilla para generar el PDF.", "error");
+                mostrarViñeta("No hay alumnos en la planilla.", "error");
                 return;
             }
             const elementosNoExportables = document.querySelectorAll('.no-export, .download-actions');
             elementosNoExportables.forEach(el => el.style.visibility = 'hidden');
 
             const elementoAImprimir = document.getElementById('area-impresion-pdf');
-            const fecha = new Date().toLocaleDateString();
+            const fecha = new Date().toLocaleDateString().replace(/\//g, '-');
+            const nombreArchivo = `Reporte_Asistencia_Nivel1_${fecha}.pdf`;
 
             const opcionesConfig = {
                 margin:       15,
-                filename:     `Reporte_Asistencia_Nivel1_${fecha.replace(/\//g, '-')}.pdf`,
+                filename:     nombreArchivo,
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2, useCORS: true },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            html2pdf().from(elementoAImprimir).set(opcionesConfig).save().then(() => {
+            html2pdf().from(elementoAImprimir).set(opcionesConfig).outputPdf('blob').then(async (pdfBlob) => {
                 elementosNoExportables.forEach(el => el.style.visibility = 'visible');
-                mostrarViñeta("Documento PDF Nivel 1 generado.", "success");
+                const archivo = new File([pdfBlob], nombreArchivo, { type: 'application/pdf' });
+
+                if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+                    try {
+                        await navigator.share({ files: [archivo], title: 'Reporte PDF', text: 'Asistencia Nivel 1.' });
+                        mostrarViñeta("PDF compartido con éxito.", "success");
+                    } catch (error) {}
+                } else {
+                    html2pdf().from(elementoAImprimir).set(opcionesConfig).save();
+                }
             });
         });
 
         window.modificarManualDirecto = function(index, nuevoEstado) {
-            guardarHistorial(); // Respaldar antes del cambio manual de estado
+            guardarHistorial();
             alumnos[index].estado = nuevoEstado;
             if (nuevoEstado === "Ausente") {
                 alumnos[index].faltas += 1;
                 verificarBajaAutomatica(index);
             } else {
-                localStorage.setItem('asistencia_qr_church_n1', JSON.stringify(alumnos));
+                localStorage.setItem('asistencia_qr_church', JSON.stringify(alumnos));
                 actualizarTabla();
                 mostrarViñeta(`Modificación guardada.`, "success");
             }
         };
 
         window.cambiarFaltasManual = function(index, cantidad) {
-            guardarHistorial(); // Respaldar antes de reescribir número de falta
+            guardarHistorial();
             alumnos[index].faltas = parseInt(cantidad) || 0;
             verificarBajaAutomatica(index);
         };
@@ -464,30 +493,30 @@
             const alumno = alumnos[index];
             if (alumno.faltas >= 3) {
                 reproducirSonido('error');
-                excluidosAnuales.push(alumno.dni);
-                localStorage.setItem('excluidos_anual_n1', JSON.stringify(excluidosAnuales));
-                alert(`ALUMNO DADO DE BAJA: ${alumno.apellido}, ${alumno.nombre} acumuló 3 faltas. Fue removido de este nivel.`);
+                if (!excluidosAnuales.includes(alumno.dni)) {
+                    excluidosAnuales.push(alumno.dni);
+                }
+                localStorage.setItem('excluidos_anual', JSON.stringify(excluidosAnuales));
+                alert(`ALUMNO DADO DE BAJA: ${alumno.apellido} acumuló 3 faltas.`);
                 alumnos.splice(index, 1);
             }
-            localStorage.setItem('asistencia_qr_church_n1', JSON.stringify(alumnos));
+            localStorage.setItem('asistencia_qr_church', JSON.stringify(alumnos));
             actualizarTabla();
         }
 
         window.eliminarAlumno = function(index) {
             if (confirm(`¿Eliminar por completo a ${alumnos[index].apellido}?`)) {
-                guardarHistorial(); // Respaldar antes de borrar un alumno por completo
+                guardarHistorial();
                 alumnos.splice(index, 1);
-                localStorage.setItem('asistencia_qr_church_n1', JSON.stringify(alumnos));
+                localStorage.setItem('asistencia_qr_church', JSON.stringify(alumnos));
                 actualizarTabla();
-                mostrarViñeta("Alumno removido del padrón.", "success");
+                mostrarViñeta("Alumno removido.", "success");
             }
         };
 
         window.reiniciarSistema = function() {
-            if (confirm("⚠️ ¿Estás totalmente seguro de reiniciar la app de NIVEL 1? Esto borrará el padrón completo de alumnos y desbloqueará a los dados de baja.")) {
-                localStorage.removeItem('asistencia_qr_church_n1');
-                localStorage.removeItem('excluidos_anual_n1');
-                alert("Base de datos de Nivel 1 vaciada con éxito.");
+            if (confirm("⚠️ ¿Estás seguro de vaciar por completo el padrón e historial de Nivel 1?")) {
+                localStorage.clear();
                 location.reload();
             }
         }
@@ -497,24 +526,28 @@
             cuerpoTabla.innerHTML = "";
             alumnos.forEach((alumno, index) => {
                 const tr = document.createElement('tr');
-                let badgeClass = alumno.estado === "Presente" ? "badge-presente" : "badge-ausente";
-                let estiloFila = alumno.faltas === 2 ? 'style="background-color: #fff9e6;"' : '';
+                tr.className = "hover:bg-slate-50/80 transition-colors";
+                
+                let clasesBadge = alumno.estado === "Presente" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700";
+                let estiloFila = alumno.faltas === 2 ? 'class="bg-amber-50/60"' : '';
 
                 tr.innerHTML = `
-                    <td ${estiloFila}><strong>${alumno.apellido.toUpperCase()}</strong>, ${alumno.nombre}</td>
-                    <td ${estiloFila}>${alumno.dni}</td>
-                    <td ${estiloFila}>
-                        <input type="number" min="0" max="3" value="${alumno.faltas}" onchange="cambiarFaltasManual(${index}, this.value)" style="width: 45px; padding: 4px; text-align: center;">
+                    <td ${estiloFila} class="p-4 font-medium text-slate-900"><strong>${alumno.apellido.toUpperCase()}</strong>, ${alumno.nombre}</td>
+                    <td ${estiloFila} class="p-4 text-slate-500 font-mono">${alumno.dni}</td>
+                    <td ${estiloFila} class="p-4 text-center">
+                        <input type="number" min="0" max="3" value="${alumno.faltas}" onchange="cambiarFaltasManual(${index}, this.value)" 
+                               class="w-12 p-1.5 border border-slate-200 text-center rounded-md font-semibold bg-white focus:outline-none focus:border-pink-500">
                     </td>
-                    <td ${estiloFila}><span class="badge ${badgeClass}">${alumno.estado}</span></td>
-                    <td class="no-export" ${estiloFila}>
-                        <select onchange="modificarManualDirecto(${index}, this.value)">
+                    <td ${estiloFila} class="p-4"><span class="px-2.5 py-1 rounded-md text-xs font-bold uppercase ${clasesBadge}">${alumno.estado}</span></td>
+                    <td ${estiloFila} class="p-4 no-export">
+                        <select onchange="modificarManualDirecto(${index}, this.value)" 
+                                class="p-1.5 bg-white border border-slate-200 text-slate-700 rounded-md text-xs font-medium focus:outline-none focus:border-pink-500">
                             <option value="Presente" ${alumno.estado === 'Presente' ? 'selected' : ''}>Presente</option>
                             <option value="Ausente" ${alumno.estado === 'Ausente' ? 'selected' : ''}>Ausente</option>
                         </select>
                     </td>
-                    <td class="no-export" ${estiloFila}>
-                        <button class="btn-row-delete" onclick="eliminarAlumno(${index})">🗑️ Borrar</button>
+                    <td ${estiloFila} class="p-4 no-export text-center">
+                        <button onclick="eliminarAlumno(${index})" class="text-xs font-bold text-white bg-red-500 hover:bg-red-600 px-2.5 py-1.5 rounded-md transition-colors shadow-sm transform active:scale-[0.96]">🗑️ Borrar</button>
                     </td>
                 `;
                 cuerpoTabla.appendChild(tr);
