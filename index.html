@@ -207,50 +207,68 @@
 
         // REGISTRO DE ALUMNOS
         document.getElementById('btn-alumno-registrar').addEventListener('click', async () => {
+                document.getElementById('btn-alumno-registrar').addEventListener('click', async () => {
             const dni = document.getElementById('al-dni').value.trim();
             const nombre = document.getElementById('al-nombre').value.trim();
             const apellido = document.getElementById('al-apellido').value.trim();
 
-            if(!/^[0-9]{7,8}$/.test(dni)) return mostrarViñeta("DNI Inválido", "error");
-            if(!nombre || !apellido) return mostrarViñeta("Faltan datos", "error");
+            if (!dni || !nombre || !apellido) {
+                mostrarViñeta("Por favor, completa todos los campos", "error");
+                return;
+            }
 
-            document.getElementById('btn-alumno-registrar').innerText = "Procesando...";
-            document.getElementById('btn-alumno-registrar').disabled = true;
+            mostrarCarga(true);
 
             try {
-                const res = await fetch(SCRIPT_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: "registrar", dni, nombre, apellido })
+                const response = await fetch(URL_API, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ action: 'registrarAlumno', dni, nombre, apellido })
                 });
-                const r = await res.json();
-                
- if (r.status === "success") {
-                    mostrarViñeta("¡Registro guardado en la base de datos!", "success");
-                    
-                    // 1. OCULTAMOS EL FORMULARIO POR COMPLETO (Ya no pueden escribir nada más)
+
+                const r = await response.json();
+                mostrarCarga(false);
+
+                if (r.status === "success") {
+                    // 1. DISPARAMOS LOS FUEGOS ARTIFICIALES (CONFETI)
+                    if (typeof confetti === 'function') {
+                        confetti({
+                            particleCount: 150,
+                            spread: 70,
+                            origin: { y: 0.6 }
+                        });
+                    }
+
+                    // 2. OCULTAMOS EL FORMULARIO POR COMPLETO
                     document.getElementById('form-alumno').classList.add('hidden');
                     
-                    // 2. Mostramos el contenedor del QR
+                    // 3. MOSTRAMOS EL CONTENEDOR DEL QR
                     document.getElementById('al-qr-box').classList.remove('hidden');
                     document.getElementById('al-qr-box').classList.add('flex');
                     
-                    // 3. Limpiamos y generamos el QR
+                    // 4. LIMPIAMOS Y GENERAMOS EL QR NUEVO
                     document.getElementById('al-qrcode').innerHTML = "";
                     new QRCode(document.getElementById('al-qrcode'), { text: dni, width: 150, height: 150, colorDark: "#1a365d" });
                     
-                    // 4. Ponemos el cartel de éxito gigante y el nombre del alumno
-                    document.getElementById('al-qr-box').querySelector('span').innerHTML = "⛪ ¡TE REGISTRASTE CON ÉXITO!<br><span class='text-[11px] text-slate-500 font-normal lowercase mt-1 block'>Guardá tu credencial para la entrada</span>";
+                    // 5. PONEMOS EL CARTEL DE ÉXITO ESTILO FIESTA
+                    document.getElementById('al-qr-box').querySelector('span').innerHTML = 
+                        "<div class='animate-bounce text-2xl mb-2'>🎉</div>" +
+                        "<div class='text-lg font-black text-pink-700 uppercase'>¡Registro exitoso!</div>" +
+                        "<div class='text-sm text-slate-600 mb-4'>¡Bienvenido a Nivel 1!</div>";
+                        
+                    // 6. ASIGNAMOS EL NOMBRE DEL ALUMNO A LA ETIQUETA
                     document.getElementById('al-qr-label').innerText = `${apellido.toUpperCase()}, ${nombre}`;
                 } else {
-
-                    mostrarViñeta(r.message, "error");
+                    mostrarViñeta(r.message || "Error al registrar", "error");
                 }
-            } catch(e) {
-                mostrarViñeta("Error de conexión a la nube", "error");
+            } catch (error) {
+                mostrarCarga(false);
+                mostrarViñeta("Error de conexión en la nube", "error");
+                console.error(error);
             }
-            document.getElementById('btn-alumno-registrar').innerText = "Registrarme y Crear mi QR";
-            document.getElementById('btn-alumno-registrar').disabled = false;
         });
+
 
         // DESCARGA REPARADA: Fuerza fondo blanco y máxima nitidez (Elimina fondo negro de algunos celus)
         document.getElementById('btn-al-descargar').addEventListener('click', () => {
