@@ -12,17 +12,14 @@
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col items-center antialiased pb-10">
 
-    <!-- Notificaciones flotantes -->
     <div id="notification-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3.5"></div>
 
-    <!-- Banner Principal con la Imagen de la Iglesia -->
     <div class="w-full max-w-5xl py-12 px-4 rounded-b-2xl shadow-lg border-b-4 border-pink-600 text-center relative overflow-hidden mb-6"
          style="background-image: linear-gradient(rgba(26, 54, 93, 0.85), rgba(26, 54, 93, 0.85)), url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSPFDgrwRHjbVD_Nl2JOmBWqz6hX457GV0IMJ6j2isnXOXOOO2EMhH0W0&s=10'); background-size: cover; background-position: center;">
         <h1 class="m-0 text-3xl md:text-4xl font-extrabold text-white uppercase tracking-wider drop-shadow-sm">Nivel 1</h1>
         <p class="m-0 mt-2 text-slate-200 text-sm md:text-base font-medium opacity-90">CCI - Control de Asistencia y Autogestión</p>
     </div>
 
-    <!-- PANTALLA 1: MODO ALUMNO (REGISTRO AUTÓNOMO) -->
     <div id="vista-alumno" class="hidden w-[95%] max-w-md bg-white rounded-2xl p-6 shadow-md border border-slate-100 flex flex-col text-center">
         <h2 class="text-2xl font-bold text-slate-800 mb-2">Inscripción a Clase</h2>
         <p class="text-xs text-slate-400 mb-6">Ingresá tus datos para registrarte y generar tu credencial de acceso.</p>
@@ -45,7 +42,6 @@
             </button>
         </form>
 
-        <!-- Contenedor del QR que se le muestra al Alumno -->
         <div id="al-qr-box" class="hidden mt-6 p-5 border-2 border-dashed border-pink-300 rounded-xl bg-pink-50/30 flex-col items-center">
             <span class="font-extrabold text-pink-700 text-xs uppercase mb-3">¡Inscripción Exitosa! Sacale captura a tu QR:</span>
             <div id="al-qrcode" class="mx-auto p-3 bg-white rounded-xl shadow-md"></div>
@@ -54,18 +50,20 @@
         </div>
     </div>
 
-    <!-- PANTALLA 2: MODO ADMINISTRADOR (PANEL GENERAL CON ESCÁNER Y TABLA) -->
     <div id="vista-admin" class="hidden w-[95%] max-w-5xl flex-col items-center">
-        <!-- Estado -->
         <div id="status" class="w-full bg-white border-l-4 border-pink-600 rounded-r-xl shadow-sm p-4 text-center font-bold text-sm text-slate-700 mb-6 uppercase">
             CONECTANDO CON LA NUBE (GOOGLE SHEETS)...
         </div>
 
         <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <!-- Escáner QR del Administrador -->
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col md:col-span-1">
                 <h2 class="text-lg font-bold text-slate-800 border-b pb-2 mb-2">📸 Escáner de Entrada</h2>
                 <div id="reader" class="w-full max-w-[260px] mx-auto rounded-xl overflow-hidden shadow-inner !border-0"></div>
+                
+                <div id="cartel-gigante" class="mt-4 p-4 rounded-xl text-center font-extrabold uppercase transition-all hidden border duration-300">
+                    <span id="cartel-texto-grande" class="block text-base tracking-wide"></span>
+                </div>
+
                 <div class="mt-4 text-center text-[11px] text-slate-400 font-medium leading-relaxed bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                     <strong class="text-slate-600 block mb-1 uppercase tracking-wide text-[10px]">Horarios Habilitados:</strong>
                     Viernes: 19:00 a 22:30 hs<br>
@@ -73,7 +71,6 @@
                 </div>
             </div>
 
-            <!-- Tabla General Dinámica (Toma todo desde Sheets) -->
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 overflow-hidden md:col-span-2 flex flex-col">
                 <div id="area-impresion-pdf" class="w-full bg-white">
                     <h2 class="text-lg font-bold text-slate-800 mb-1">Planilla en Tiempo Real (Nivel 1)</h2>
@@ -88,7 +85,7 @@
                                     <th class="p-3">Alumno</th>
                                     <th class="p-3">DNI</th>
                                     <th class="p-3 text-center">Faltas</th>
-                                    <th class="p-3">Estado</th>
+                                    <th class="p-3">Estado Aula</th>
                                     <th class="p-3 no-export">Acción</th>
                                 </tr>
                             </thead>
@@ -108,7 +105,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const esAdmin = urlParams.get('admin') === 'true';
 
-        // Sistema de pitidos limpios (Beeps) por frecuencias de onda sin audios externos
+        // Sistema de pitidos limpios (Beeps)
         function emitirPitido(tipo = 'exito') {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -147,23 +144,21 @@
                     oscillator.stop(audioCtx.currentTime + 0.35);
                 }
             } catch (e) {
-                console.log("Audio en espera de interacción.");
+                console.log("Audio en espera.");
             }
         }
 
         // Horarios requeridos los domingos y viernes
         function verificarHorarioValido() {
             const ahora = new Date();
-            const diaSemana = ahora.getDay(); // 0 = Domingo, 5 = Viernes
+            const diaSemana = ahora.getDay(); 
             const horaActual = ahora.getHours() + (ahora.getMinutes() / 60);
 
-            // DOMINGOS: 9:30hs (9.5) a 12:00hs (12.0) Y 17:00hs (17.0) a 22:30hs (22.5)
             if (diaSemana === 0) {
                 if ((horaActual >= 9.5 && horaActual <= 12.0) || (horaActual >= 17.0 && horaActual <= 22.5)) {
                     return true;
                 }
             }
-            // VIERNES: 19:00hs (19.0) a 22:30hs (22.5)
             if (diaSemana === 5) {
                 if (horaActual >= 19.0 && horaActual <= 22.5) {
                     return true;
@@ -181,7 +176,26 @@
             setTimeout(() => vineta.remove(), 4000);
         }
 
-        // CONTROL DE VISTAS (PÁGINAS)
+        // Función del Cartel Gigante bajo el escáner
+        function flashearCartelGigante(texto, tipo) {
+            const cartel = document.getElementById('cartel-gigante');
+            const txt = document.getElementById('cartel-texto-grande');
+            cartel.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-800', 'border-emerald-300', 'bg-red-100', 'text-red-800', 'border-red-300', 'bg-amber-100', 'text-amber-800', 'border-amber-300');
+            
+            txt.innerText = texto;
+            if (tipo === 'exito') {
+                cartel.className = "mt-4 p-4 rounded-xl text-center font-extrabold uppercase transition-all border duration-300 bg-emerald-100 text-emerald-800 border-emerald-300 block animate-bounce";
+            } else if (tipo === 'advertencia') {
+                cartel.className = "mt-4 p-4 rounded-xl text-center font-extrabold uppercase transition-all border duration-300 bg-amber-100 text-amber-800 border-amber-300 block";
+            } else {
+                cartel.className = "mt-4 p-4 rounded-xl text-center font-extrabold uppercase transition-all border duration-300 bg-red-100 text-red-800 border-red-300 block";
+            }
+            
+            setTimeout(() => {
+                cartel.classList.add('hidden');
+            }, 3500);
+        }
+
         if (esAdmin) {
             document.getElementById('vista-admin').classList.remove('hidden');
             document.getElementById('vista-admin').classList.add('flex');
@@ -191,7 +205,7 @@
             document.getElementById('vista-alumno').classList.remove('hidden');
         }
 
-        // REGISTRO DE ALUMNOS (MODO INTEGRADO)
+        // REGISTRO DE ALUMNOS
         document.getElementById('btn-alumno-registrar').addEventListener('click', async () => {
             const dni = document.getElementById('al-dni').value.trim();
             const nombre = document.getElementById('al-nombre').value.trim();
@@ -237,7 +251,7 @@
             }
         });
 
-        // CONTROL DE BASE DE DATOS DESDE EL ADMINISTRADOR
+        // CONTROL DESDE ADMINISTRADOR
         async function cargarDatosDesdeSheets() {
             try {
                 const r = await fetch(SCRIPT_URL);
@@ -254,14 +268,27 @@
             tbody.innerHTML = "";
             alumnos.sort((a,b) => a.apellido.localeCompare(b.apellido)).forEach((al, idx) => {
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 border-b border-slate-100";
+                
+                // --- ALERTA VISUAL SEGÚN LAS FALTAS ---
+                let colorFila = "hover:bg-slate-50";
+                let badgeEstado = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${al.estado==='Presente'?'bg-emerald-100 text-emerald-800':'bg-slate-100 text-slate-700'}">${al.estado}</span>`;
+                
+                if (al.faltas === 3) {
+                    colorFila = "bg-amber-50 hover:bg-amber-100 border-l-4 border-amber-500";
+                    badgeEstado += ` <span class="ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-600 text-white uppercase">Al límite</span>`;
+                } else if (al.faltas >= 4) {
+                    colorFila = "bg-red-50 hover:bg-red-100 border-l-4 border-red-500 text-red-950";
+                    badgeEstado = `<span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-red-600 text-white animate-pulse">🛑 LIBRE</span>`;
+                }
+
+                tr.className = `border-b border-slate-100 ${colorFila}`;
                 tr.innerHTML = `
                     <td class="p-3 font-semibold">${al.apellido.toUpperCase()}, ${al.nombre}</td>
                     <td class="p-3 text-slate-500 font-mono">${al.dni}</td>
-                    <td class="p-3 text-center font-bold">${al.faltas}</td>
-                    <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${al.estado==='Presente'?'bg-emerald-100 text-emerald-800':'bg-red-100 text-red-800'}">${al.estado}</span></td>
+                    <td class="p-3 text-center font-extrabold text-sm">${al.faltas}</td>
+                    <td class="p-3">${badgeEstado}</td>
                     <td class="p-3 no-export">
-                        <select onchange="modificarDesdeAdmin(${idx}, this.value)" class="p-1 border rounded text-xs bg-white">
+                        <select onchange="modificarDesdeAdmin(${idx}, this.value)" class="p-1 border rounded text-xs bg-white text-slate-800">
                             <option value="Presente" ${al.estado==='Presente'?'selected':''}>Presente</option>
                             <option value="Ausente" ${al.estado==='Ausente'?'selected':''}>Ausente</option>
                         </select>
@@ -288,14 +315,14 @@
             cargarDatosDesdeSheets();
         }
 
-        // INICIALIZACIÓN DEL ESCÁNER CON FILTRO HORARIO
         function inicializarEscaner() {
-            const scan = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 200 });
+            const scan = new Html5QrcodeScanner("reader", { fps: 12, qrbox: 200 });
             scan.render(async (dniLeido) => {
                 
                 if (!verificarHorarioValido()) {
                     emitirPitido('error');
-                    mostrarViñeta("Escaneo denegado: Fuera de los días y horarios fijados.", "error");
+                    mostrarViñeta("Escaneo denegado: Fuera de horario.", "error");
+                    flashearCartelGigante("FUERA DE HORARIO", "error");
                     return;
                 }
 
@@ -303,12 +330,20 @@
                 if (al) {
                     if (al.estado === "Presente") {
                         emitirPitido('advertencia');
-                        mostrarViñeta(`${al.apellido} ya tiene el presente asignado hoy.`, "warning");
+                        mostrarViñeta(`${al.apellido} ya tiene el presente.`, "warning");
+                        flashearCartelGigante(`REPETIDO: ${al.apellido}`, "advertencia");
                         return;
                     }
-                    
-                    emitirPitido('exito');
-                    mostrarViñeta(`Presente: ${al.apellido}, ${al.nombre}`, "success");
+
+                    if (al.faltas >= 4) {
+                        emitirPitido('error');
+                        mostrarViñeta(`Atención: Alumno en condición de LIBRE.`, "error");
+                        flashearCartelGigante(`🛑 LIBRE: ${al.apellido}`, "error");
+                    } else {
+                        emitirPitido('exito');
+                        mostrarViñeta(`Presente: ${al.apellido}, ${al.nombre}`, "success");
+                        flashearCartelGigante(`✅ ${al.apellido}, ${al.nombre}`, "exito");
+                    }
                     
                     await fetch(SCRIPT_URL, {
                         method: "POST",
@@ -317,12 +352,13 @@
                     cargarDatosDesdeSheets();
                 } else {
                     emitirPitido('error');
-                    mostrarViñeta("El DNI no figura en el padrón.", "error");
+                    mostrarViñeta("DNI no registrado.", "error");
+                    flashearCartelGigante("DNI DESCONOCIDO", "error");
                 }
             });
         }
 
-        // EXPORTACIONES COMPATIBLES
+        // DESCARGAS
         document.getElementById('btn-excel').addEventListener('click', () => {
             const s = XLSX.utils.json_to_sheet(alumnos);
             const b = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(b, s, "Asistencia N1");
@@ -339,3 +375,4 @@
     </script>
 </body>
 </html>
+                   
