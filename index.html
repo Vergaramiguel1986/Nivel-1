@@ -62,7 +62,7 @@
         </div>
 
         <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <!-- Escáner QR del Pastor / Administrador -->
+            <!-- Escáner QR del Administrador -->
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col md:col-span-1">
                 <h2 class="text-lg font-bold text-slate-800 border-b pb-2 mb-2">📸 Escáner de Entrada</h2>
                 <div id="reader" class="w-full max-w-[260px] mx-auto rounded-xl overflow-hidden shadow-inner !border-0"></div>
@@ -108,7 +108,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const esAdmin = urlParams.get('admin') === 'true';
 
-        // Sistema de pitidos limpios (Beeps)
+        // Sistema de pitidos limpios (Beeps) por frecuencias de onda sin audios externos
         function emitirPitido(tipo = 'exito') {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -151,7 +151,7 @@
             }
         }
 
-        // Validación estricta de días y horarios requeridos
+        // Horarios requeridos los domingos y viernes
         function verificarHorarioValido() {
             const ahora = new Date();
             const diaSemana = ahora.getDay(); // 0 = Domingo, 5 = Viernes
@@ -181,7 +181,7 @@
             setTimeout(() => vineta.remove(), 4000);
         }
 
-        // CONTROL DE VISTAS
+        // CONTROL DE VISTAS (PÁGINAS)
         if (esAdmin) {
             document.getElementById('vista-admin').classList.remove('hidden');
             document.getElementById('vista-admin').classList.add('flex');
@@ -191,7 +191,7 @@
             document.getElementById('vista-alumno').classList.remove('hidden');
         }
 
-        // REGISTRO DE ALUMNOS
+        // REGISTRO DE ALUMNOS (MODO INTEGRADO)
         document.getElementById('btn-alumno-registrar').addEventListener('click', async () => {
             const dni = document.getElementById('al-dni').value.trim();
             const nombre = document.getElementById('al-nombre').value.trim();
@@ -237,7 +237,7 @@
             }
         });
 
-        // CONTROL DESDE ADMINISTRADOR
+        // CONTROL DE BASE DE DATOS DESDE EL ADMINISTRADOR
         async function cargarDatosDesdeSheets() {
             try {
                 const r = await fetch(SCRIPT_URL);
@@ -322,7 +322,7 @@
             });
         }
 
-        // DESCARGAS
+        // EXPORTACIONES COMPATIBLES
         document.getElementById('btn-excel').addEventListener('click', () => {
             const s = XLSX.utils.json_to_sheet(alumnos);
             const b = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(b, s, "Asistencia N1");
