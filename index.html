@@ -304,9 +304,28 @@
         }
 
         function actualizarTabla() {
+                function actualizarTabla() {
             const tbody = document.getElementById('cuerpo-tabla');
             tbody.innerHTML = "";
-            alumnos.sort((a,b) => a.apellido.localeCompare(b.apellido)).forEach((al, idx) => {
+            
+            // ---------------------------------------------------------
+            // CORRECCIÓN FIJA: ORDENAR DE MENOR A MAYOR FALTAS, Y LUEGO ALFABÉTICO
+            // ---------------------------------------------------------
+            alumnos.sort((a, b) => {
+                const faltasA = parseInt(a.faltas) || 0;
+                const faltasB = parseInt(b.faltas) || 0;
+
+                // 1º Criterio: Si las faltas son distintas, van de menos a más
+                if (faltasA !== faltasB) {
+                    return faltasA - faltasB;
+                }
+
+                // 2º Criterio: Si tienen las mismas faltas, desempata el abecedario por Apellido
+                return a.apellido.localeCompare(b.apellido);
+            });
+            // ---------------------------------------------------------
+
+            alumnos.forEach((al, idx) => {
                 const tr = document.createElement('tr');
                 let colorFila = "hover:bg-slate-50";
                 let badgeEstado = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${al.estado==='Presente'?'bg-emerald-100 text-emerald-800':'bg-slate-100 text-slate-700'}">${al.estado}</span>`;
