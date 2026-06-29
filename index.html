@@ -3,596 +3,336 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CCI - Asistencia Nivel 1</title>
-    <!-- Cargamos Tailwind CSS desde su CDN oficial -->
+    <title>CCI - Sistema Unificado Nivel 1</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Scripts esenciales para el funcionamiento del sistema -->
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js">
-        function probarVoz() {
-    const voz = new SpeechSynthesisUtterance("Probando, uno, dos, tres. Si escuchás esto, la voz funciona.");
-    voz.lang = 'es-AR';
-    window.speechSynthesis.speak(voz);
-    alert("Si no escuchaste nada, revisá el volumen multimedia de nuevo.");
-        }
-        
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col items-center antialiased">
-<button onclick="probarVoz()" class="fixed top-2 left-2 z-50 bg-blue-500 text-white p-2 rounded text-xs">Probar Voz</button>
-    
-    <!-- Contenedor de Notificaciones Flotantes (Viñetas) -->
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col items-center antialiased pb-10">
+
     <div id="notification-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3.5"></div>
 
-    <!-- Banner Principal Estilizado con tu Imagen de Internet -->
     <div class="w-full max-w-5xl py-12 px-4 rounded-b-2xl shadow-lg border-b-4 border-pink-600 text-center relative overflow-hidden mb-6"
-         style="background-image: linear-gradient(rgba(26, 54, 93, 0.82), rgba(26, 54, 93, 0.82)), url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSPFDgrwRHjbVD_Nl2JOmBWqz6hX457GV0IMJ6j2isnXOXOOO2EMhH0W0&s=10'); background-size: cover; background-position: center;">
+         style="background-image: linear-gradient(rgba(26, 54, 93, 0.85), rgba(26, 54, 93, 0.85)), url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSPFDgrwRHjbVD_Nl2JOmBWqz6hX457GV0IMJ6j2isnXOXOOO2EMhH0W0&s=10'); background-size: cover; background-position: center;">
         <h1 class="m-0 text-3xl md:text-4xl font-extrabold text-white uppercase tracking-wider drop-shadow-sm">Nivel 1</h1>
-        <p class="m-0 mt-2 text-slate-200 text-sm md:text-base font-medium opacity-90">CCI - Control de Asistencia y Padrón de Alumnos</p>
+        <p class="m-0 mt-2 text-slate-200 text-sm md:text-base font-medium opacity-90">CCI - Control de Asistencia y Autogestión</p>
     </div>
 
-    <!-- Estado del Sistema -->
-    <div id="status" class="w-[95%] max-w-5xl bg-white border-l-4 border-pink-600 rounded-r-xl shadow-sm p-4 text-center font-bold text-sm tracking-wide text-slate-700 mb-6 uppercase transition-all duration-300">
-        INICIALIZANDO...
-    </div>
-
-    <!-- Contenedor Principal en Cuadrícula (Grid) -->
-    <div class="w-[95%] max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+    <div id="vista-alumno" class="hidden w-[95%] max-w-md bg-white rounded-2xl p-6 shadow-md border border-slate-100 flex flex-col text-center">
+        <h2 class="text-2xl font-bold text-slate-800 mb-2">Inscripción a Clase</h2>
+        <p class="text-xs text-slate-400 mb-6">Ingresá tus datos para registrarte y generar tu credencial de acceso.</p>
         
-        <!-- TARJETA 1: ESCÁNER QR -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col transition hover:shadow-md">
-            <h2 class="text-xl font-bold text-slate-800 border-b border-slate-100 pb-3 mb-2 flex items-center gap-2">
-                📸 Escáner de Credenciales QR
-            </h2>
-            <p class="text-xs text-slate-400 mb-4">Habilitado solo en días y horarios de clase.</p>
-            <div id="reader" class="w-full max-w-[320px] mx-auto rounded-xl overflow-hidden shadow-inner !border-0"></div>
-        </div>
-
-        <!-- TARJETA 2: REGISTRO DE ALUMNOS -->
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col transition hover:shadow-md">
-            <h2 class="text-xl font-bold text-slate-800 border-b border-slate-100 pb-3 mb-2 flex items-center gap-2">
-                👤 Registrar y Crear QR Único
-            </h2>
-            <p class="text-xs text-slate-400 mb-4">Padrón controlado de alumnos con descarga de credencial.</p>
-            
-            <form id="form-registro" class="space-y-4" onsubmit="return false;">
-                <div class="flex flex-col">
-                    <label class="text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">DNI (7 u 8 dígitos):</label>
-                    <input type="text" id="reg-dni" required placeholder="Ej: 46123456" autocomplete="off"
-                           class="p-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-sm focus:border-pink-500 focus:ring-2 focus:ring-pink-100 focus:outline-none transition-all">
-                </div>
-                <div class="flex flex-col">
-                    <label class="text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Nombre(s):</label>
-                    <input type="text" id="reg-nombre" required placeholder="Ej: Juan"
-                           class="p-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-sm focus:border-pink-500 focus:ring-2 focus:ring-pink-100 focus:outline-none transition-all">
-                </div>
-                <div class="flex flex-col">
-                    <label class="text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Apellido(s):</label>
-                    <input type="text" id="reg-apellido" required placeholder="Ej: Pérez"
-                           class="p-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-sm focus:border-pink-500 focus:ring-2 focus:ring-pink-100 focus:outline-none transition-all">
-                </div>
-                <button type="button" id="btn-registrar-alumno" 
-                        class="w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-lg shadow-sm hover:shadow transition-all transform active:scale-[0.99] mt-2 text-sm uppercase tracking-wide">
-                    Registrar Alumno y Generar QR
-                </button>
-            </form>
-
-            <!-- Recuadro del QR generado -->
-            <div id="qr-result-box" class="hidden mt-5 p-5 border-2 border-dashed border-pink-300 rounded-xl bg-pink-50/40 text-center flex-col items-center">
-                <span class="font-extrabold text-slate-700 text-xs tracking-wider uppercase mb-3">¡Credencial generada con éxito!</span>
-                <div id="qrcode" class="mx-auto p-3 bg-white rounded-xl shadow-sm border border-slate-100"></div>
-                <span id="qr-label" class="text-xs font-bold text-slate-700 mt-3 mb-4 px-2 py-1 bg-white rounded-md border border-slate-200 shadow-sm"></span>
-                <button type="button" id="btn-descargar-qr" 
-                        class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold py-2.5 px-4 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm transform active:scale-[0.98]">
-                    📥 Descargar Imagen QR
-                </button>
+        <form id="form-alumno" class="space-y-4 text-left" onsubmit="return false;">
+            <div class="flex flex-col">
+                <label class="text-xs font-semibold text-slate-500 mb-1">DNI (Solo números):</label>
+                <input type="text" id="al-dni" required placeholder="Ej: 46123456" class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:border-pink-500 focus:outline-none">
             </div>
+            <div class="flex flex-col">
+                <label class="text-xs font-semibold text-slate-500 mb-1">Nombre(s):</label>
+                <input type="text" id="al-nombre" required placeholder="Tu Nombre" class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:border-pink-500 focus:outline-none">
+            </div>
+            <div class="flex flex-col">
+                <label class="text-xs font-semibold text-slate-500 mb-1">Apellido(s):</label>
+                <input type="text" id="al-apellido" required placeholder="Tu Apellido" class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:border-pink-500 focus:outline-none">
+            </div>
+            <button type="button" id="btn-alumno-registrar" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 rounded-lg text-sm uppercase tracking-wide transition-all shadow-sm">
+                Registrarme y Crear mi QR
+            </button>
+        </form>
+
+        <div id="al-qr-box" class="hidden mt-6 p-5 border-2 border-dashed border-pink-300 rounded-xl bg-pink-50/30 flex-col items-center">
+            <span class="font-extrabold text-pink-700 text-xs uppercase mb-3">¡Inscripción Exitosa! Sacale captura a tu QR:</span>
+            <div id="al-qrcode" class="mx-auto p-3 bg-white rounded-xl shadow-md"></div>
+            <span id="al-qr-label" class="text-xs font-bold text-slate-700 mt-3 mb-4 bg-white px-2 py-1 rounded border"></span>
+            <button type="button" id="btn-al-descargar" class="bg-slate-800 text-white text-xs font-bold py-2 px-4 rounded-lg">📥 Guardar en el Celular</button>
+        </div>
+    </div>
+
+    <div id="vista-admin" class="hidden w-[95%] max-w-5xl flex-col items-center">
+        <div id="status" class="w-full bg-white border-l-4 border-pink-600 rounded-r-xl shadow-sm p-4 text-center font-bold text-sm text-slate-700 mb-6 uppercase">
+            CONECTANDO CON LA NUBE (GOOGLE SHEETS)...
         </div>
 
-        <!-- SECCIÓN DE LA TABLA (ANCHO COMPLETO) -->
-        <div class="md:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-100 overflow-hidden">
-            <div id="area-impresion-pdf" class="w-full bg-white">
-                <h2 class="text-xl font-bold text-slate-800 mb-1">Planilla de Control y Asistencia General - NIVEL 1</h2>
-                <p class="text-xs text-slate-400 mb-5">Límite estricto: la tercera falta genera la baja inmediata del sistema.</p>
-                
-                <!-- Botones de descarga -->
-                <div class="flex flex-wrap gap-3 mb-6 download-actions">
-                    <button class="bg-[#1f7244] hover:bg-[#165230] text-white font-bold py-2.5 px-4 rounded-lg text-xs transition-colors flex items-center gap-1.5 shadow-sm transform active:scale-[0.98]" id="btn-exportar-excel">
-                        🟢 Descargar Excel (.xlsx)
-                    </button>
-                    <button class="bg-[#c0392b] hover:bg-[#962d22] text-white font-bold py-2.5 px-4 rounded-lg text-xs transition-colors flex items-center gap-1.5 shadow-sm transform active:scale-[0.98]" id="btn-exportar-pdf">
-                        🔴 Descargar Reporte PDF (.pdf)
-                    </button>
-                </div>
-
-                <!-- Tabla Responsiva -->
-                <div class="overflow-x-auto rounded-xl border border-slate-100">
-                    <table id="tabla-asistencia" class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-slate-50 text-slate-600 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
-                                <th class="p-4">Alumno</th>
-                                <th class="p-4">DNI</th>
-                                <th class="p-4 text-center">Faltas</th>
-                                <th class="p-4">Estado Actual</th>
-                                <th class="p-4 no-export">Acción Directa</th>
-                                <th class="p-4 no-export text-center">Eliminar</th>
-                            </tr>
-                        </thead>
-                        <tbody id="cuerpo-tabla" class="text-sm divide-y divide-slate-100 text-slate-700"></tbody>
-                    </table>
+        <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col md:col-span-1">
+                <h2 class="text-lg font-bold text-slate-800 border-b pb-2 mb-2">📸 Escáner de Entrada</h2>
+                <div id="reader" class="w-full max-w-[260px] mx-auto rounded-xl overflow-hidden shadow-inner !border-0"></div>
+                <div class="mt-3 text-center text-[11px] text-slate-400 font-medium">
+                    Horarios permitidos:<br>
+                    Dom: 09:30 a 12:00 hs y 17:00 a 22:30 hs<br>
+                    Vie: 19:00 a 22:30 hs
                 </div>
             </div>
-        </div>
 
-        <!-- PANEL DE CONTROL ADMINISTRATIVO -->
-        <div class="md:col-span-2 bg-white rounded-2xl p-6 shadow-sm border-2 border-dashed border-red-200 mt-4">
-            <h2 class="text-lg font-bold text-red-600 border-b border-red-50 pb-2.5 mb-1">Administración General de la Aplicación</h2>
-            <p class="text-xs text-slate-400 mb-5">Gestione errores de captura o prepare el nuevo ciclo anual.</p>
-            <div class="flex flex-wrap gap-4 items-center">
-                <button id="btn-deshacer" onclick="deshacerUltimaAccion()" 
-                        class="hidden bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 px-5 rounded-lg text-xs tracking-wide shadow-sm transition-colors transform active:scale-[0.98]">
-                    ↩️ Deshacer Último Cambio
-                </button>
-                <button onclick="reiniciarSistema()" 
-                        class="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-5 rounded-lg text-xs tracking-wide shadow-sm transition-colors transform active:scale-[0.98]">
-                    ⚠️ REINICIAR SISTEMA (Borrar todo)
-                </button>
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 overflow-hidden md:col-span-2 flex flex-col">
+                <div id="area-impresion-pdf" class="w-full bg-white">
+                    <h2 class="text-lg font-bold text-slate-800 mb-1">Planilla en Tiempo Real (Nivel 1)</h2>
+                    <div class="flex gap-2 my-4 download-actions">
+                        <button class="bg-[#1f7244] text-white font-bold py-2 px-3 rounded-lg text-xs" id="btn-excel">🟢 Excel</button>
+                        <button class="bg-[#c0392b] text-white font-bold py-2 px-3 rounded-lg text-xs" id="btn-pdf">🔴 Reporte PDF</button>
+                    </div>
+                    <div class="overflow-x-auto rounded-xl border border-slate-100">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 font-bold uppercase text-slate-600">
+                                    <th class="p-3">Alumno</th>
+                                    <th class="p-3">DNI</th>
+                                    <th class="p-3 text-center">Faltas</th>
+                                    <th class="p-3">Estado</th>
+                                    <th class="p-3 no-export">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cuerpo-tabla" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- CÓDIGO DE LÓGICA DE CONTROL (JAVASCRIPT CON CONTROL RETROACTIVO Y VOZ) -->
     <script>
-        const statusText = document.getElementById('status');
-        const regDni = document.getElementById('reg-dni');
-        const regNombre = document.getElementById('reg-nombre');
-        const regApellido = document.getElementById('reg-apellido');
-        const btnRegistrarAlumno = document.getElementById('btn-registrar-alumno');
-        const cuerpoTabla = document.getElementById('cuerpo-tabla');
-        const notifContainer = document.getElementById('notification-container');
-        const qrResultBox = document.getElementById('qr-result-box');
-        const qrcodeDiv = document.getElementById('qrcode');
-        const qrLabel = document.getElementById('qr-label');
-        const btnDescargarQr = document.getElementById('btn-descargar-qr');
-        const btnDeshacer = document.getElementById('btn-deshacer');
-        
-        const btnExportarExcel = document.getElementById('btn-exportar-excel');
-        const btnExportarPdf = document.getElementById('btn-exportar-pdf');
+        // --- ⚠️ COLOCÁ ACÁ TU URL DE APPS SCRIPT DE GOOGLE ---
+        const SCRIPT_URL = "ACA_VA_TU_URL_DE_EXEC";
 
         let alumnos = [];
-        let excluidosAnuales = [];
-        let html5QrcodeScanner = null;
-        let ultimoQrEscaneado = "";
-        let tiempoBloqueo = 0;
-        let historialRespaldo = null;
+        const urlParams = new URLSearchParams(window.location.search);
+        const esAdmin = urlParams.get('admin') === 'true';
 
-        function guardarHistorial() {
-            historialRespaldo = {
-                alumnos: JSON.parse(JSON.stringify(alumnos)),
-                excluidosAnuales: JSON.parse(JSON.stringify(excluidosAnuales))
-            };
-            btnDeshacer.classList.remove('hidden');
-        }
-
-        function deshacerUltimaAccion() {
-            if (historialRespaldo) {
-                alumnos = historialRespaldo.alumnos;
-                excluidosAnuales = historialRespaldo.excluidosAnuales;
-                localStorage.setItem('asistencia_qr_church', JSON.stringify(alumnos));
-                localStorage.setItem('excluidos_anual', JSON.stringify(excluidosAnuales));
-                historialRespaldo = null;
-                btnDeshacer.classList.add('hidden');
-                actualizarTabla();
-                reproducirSonido('success');
-                mostrarViñeta("Cambio deshecho con éxito.", "warning");
+        // Función para emitir pitidos de sistema (Beeps) sin usar archivos de audio externos
+        function emitirPitido(tipo = 'exito') {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                if (tipo === 'exito') {
+                    // Pitido agudo corto para éxito (Presente)
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // Nota La5
+                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.15);
+                } else if (tipo === 'advertencia') {
+                    // Doble pitido rápido
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
+                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.1);
+                    
+                    setTimeout(() => {
+                        const osc2 = audioCtx.createOscillator();
+                        const gain2 = audioCtx.createGain();
+                        osc2.connect(gain2); gain2.connect(audioCtx.destination);
+                        osc2.frequency.setValueAtTime(600, audioCtx.currentTime);
+                        gain2.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                        osc2.start(); osc2.stop(audioCtx.currentTime + 0.1);
+                    }, 150);
+                } else if (tipo === 'error') {
+                    // Pitido grave y más largo para error
+                    oscillator.type = 'sawtooth';
+                    oscillator.frequency.setValueAtTime(220, audioCtx.currentTime); // Nota La3 grave
+                    gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.35);
+                }
+            } catch (e) {
+                console.log("El navegador bloqueó el audio momentáneamente hasta una interacción física.");
             }
         }
 
-        function esHorarioHabilitado() {
+        // Validación estricta de días y horarios
+        function verificarHorarioValido() {
             const ahora = new Date();
-            const diaSemana = ahora.getDay(); 
-            const horaActual = ahora.getHours();
-            const minutosActual = ahora.getMinutes();
-            const tiempoEnMinutos = (horaActual * 60) + minutosActual;
+            const diaSemana = ahora.getDay(); // 0 = Domingo, 5 = Viernes
+            const horaActual = ahora.getHours() + (ahora.getMinutes() / 60);
 
-            if (diaSemana === 5) { // Viernes
-                return (tiempoEnMinutos >= 60 && tiempoEnMinutos <= 1380); // 1:00 AM a 11:00 PM
+            // DOMINGOS: 9:30hs (9.5) a 12:00hs (12.0) Y 17:00hs (17.0) a 22:30hs (22.5)
+            if (diaSemana === 0) {
+                if ((horaActual >= 9.5 && horaActual <= 12.0) || (horaActual >= 17.0 && horaActual <= 22.5)) {
+                    return true;
+                }
             }
-            if (diaSemana === 0) { // Domingo
-                return (tiempoEnMinutos >= 540 && tiempoEnMinutos <= 1350); // 9:00 AM a 10:30 PM
+            // VIERNES: 19:00hs (19.0) a 22:30hs (22.5)
+            if (diaSemana === 5) {
+                if (horaActual >= 19.0 && horaActual <= 22.5) {
+                    return true;
+                }
             }
             return false;
         }
 
-        function obtenerIdClaseActual() {
-            const ahora = new Date();
-            const diaSemana = ahora.getDay();
-            const fechaStr = ahora.getFullYear() + String(ahora.getMonth() + 1).padStart(2, '0') + String(ahora.getDate()).padStart(2, '0');
-            
-            if (diaSemana === 5 && esHorarioHabilitado()) {
-                return "VIERNES_" + fechaStr;
-            }
-            if (diaSemana === 0 && esHorarioHabilitado()) {
-                return "DOMINGO_" + fechaStr;
-            }
-            return null;
-        }
-
-        function procesarCierreClaseAutomatico() {
-            const claseActualId = obtenerIdClaseActual();
-            if (!claseActualId) return;
-
-            const ultimaClaseRegistrada = localStorage.getItem('ultima_clase_id');
-
-            if (ultimaClaseRegistrada && ultimaClaseRegistrada !== claseActualId) {
-                let cambiosEfectuados = false;
-                let alumnosParaDarDeBaja = [];
-
-                alumnos.forEach((alumno) => {
-                    if (alumno.estado === "Ausente") {
-                        alumno.faltas += 1;
-                        cambiosEfectuados = true;
-                        
-                        if (alumno.faltas >= 3) {
-                            alumnosParaDarDeBaja.push(alumno.dni);
-                        }
-                    }
-                });
-
-                if (alumnosParaDarDeBaja.length > 0) {
-                    alumnosParaDarDeBaja.forEach(dni => {
-                        if (!excluidosAnuales.includes(dni)) {
-                            excluidosAnuales.push(dni);
-                        }
-                        const index = alumnos.findIndex(a => a.dni === dni);
-                        if (index !== -1) alumnos.splice(index, 1);
-                    });
-                    localStorage.setItem('excluidos_anual', JSON.stringify(excluidosAnuales));
-                    alert(`AVISO DE SISTEMA:\nSe han procesado bajas automáticas por acumular 3 faltas en la clase anterior.`);
-                }
-
-                alumnos.forEach(alumno => alumno.estado = "Ausente");
-
-                if (cambiosEfectuados) {
-                    localStorage.setItem('asistencia_qr_church', JSON.stringify(alumnos));
-                    mostrarViñeta("Cierre automático: Se computaron las faltas de la clase anterior.", "warning");
-                }
-            }
-
-            localStorage.setItem('ultima_clase_id', claseActualId);
-        }
-
         function mostrarViñeta(mensaje, tipo = 'success') {
             const vineta = document.createElement('div');
-            let clasesTipo = "bg-emerald-500 border-emerald-700";
-            if(tipo === 'error') clasesTipo = "bg-red-500 border-red-700";
-            if(tipo === 'warning') clasesTipo = "bg-amber-500 border-amber-700";
-
-            vineta.className = `p-4 rounded-xl color-white text-white font-bold shadow-lg min-w-[280px] border-l-4 flex items-center justify-between transition-all duration-300 ${clasesTipo}`;
-            vineta.innerHTML = `<span>${mensaje}</span><strong class="ml-3 cursor-pointer opacity-70 hover:opacity-100" onclick="this.parentElement.remove()">×</strong>`;
-            notifContainer.appendChild(vineta);
-            setTimeout(() => { vineta.remove(); }, 5000);
+            let color = tipo === 'error' ? 'bg-red-500' : (tipo === 'warning' ? 'bg-amber-500' : 'bg-emerald-500');
+            vineta.className = `p-4 rounded-xl text-white font-bold shadow-lg min-w-[260px] ${color} flex items-center justify-between`;
+            vineta.innerHTML = `<span>${mensaje}</span><strong class="ml-3 cursor-pointer opacity-70" onclick="this.parentElement.remove()">×</strong>`;
+            document.getElementById('notification-container').appendChild(vineta);
+            setTimeout(() => vineta.remove(), 4000);
         }
 
-        function hablarYReproducir(texto, tipoSonido) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                
-                const mensajeVoz = new SpeechSynthesisUtterance(texto);
-                mensajeVoz.lang = 'es-AR';
-                mensajeVoz.rate = 1.0;
-
-                mensajeVoz.onend = function() {
-                    reproducirSonido(tipoSonido);
-                };
-
-                mensajeVoz.onerror = function() {
-                    reproducirSonido(tipoSonido);
-                };
-
-                window.speechSynthesis.speak(mensajeVoz);
-            } else {
-                reproducirSonido(tipoSonido);
-            }
+        // CONTROL DE RUTAS: Alumno o Administrador
+        if (esAdmin) {
+            document.getElementById('vista-admin').classList.remove('hidden');
+            document.getElementById('vista-admin').classList.add('flex');
+            cargarDatosDesdeSheets();
+            inicializarEscaner();
+        } else {
+            document.getElementById('vista-alumno').classList.remove('hidden');
         }
 
-        function reproducirSonido(tipo) {
+        // LÓGICA MODO ALUMNO: Registro Autónomo
+        document.getElementById('btn-alumno-registrar').addEventListener('click', async () => {
+            const dni = document.getElementById('al-dni').value.trim();
+            const nombre = document.getElementById('al-nombre').value.trim();
+            const apellido = document.getElementById('al-apellido').value.trim();
+
+            if(!/^[0-9]{7,8}$/.test(dni)) return mostrarViñeta("DNI Inválido", "error");
+            if(!nombre || !apellido) return mostrarViñeta("Faltan datos", "error");
+
+            document.getElementById('btn-alumno-registrar').innerText = "Procesando...";
+            document.getElementById('btn-alumno-registrar').disabled = true;
+
             try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator(); const gain = ctx.createGain();
-                osc.connect(gain); gain.connect(ctx.destination);
-                osc.frequency.setValueAtTime(tipo === 'success' ? 880 : 220, ctx.currentTime);
-                gain.gain.setValueAtTime(0.08, ctx.currentTime);
-                osc.start(); osc.stop(ctx.currentTime + 0.15);
-            } catch (e) {}
-        }
-
-        function inicializar() {
-            const guardados = localStorage.getItem('asistencia_qr_church');
-            if (guardados) { try { alumnos = JSON.parse(guardados); } catch (e) { alumnos = []; } }
-
-            const bloqueados = localStorage.getItem('excluidos_anual');
-            if (bloqueados) { try { excluidosAnuales = JSON.parse(bloqueados); } catch (e) { excluidosAnuales = []; } }
-
-            procesarCierreClaseAutomatico();
-            actualizarTabla();
-
-            html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
-                fps: 15, 
-                qrbox: { width: 220, height: 220 },
-                supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
-                config: { useBarCodeDetectorIfSupported: true }
-            });
-            
-            html5QrcodeScanner.render(onScanSuccess, undefined, { facingMode: "environment" });
-            statusText.innerText = "SISTEMA CCI QR: CONTROL ACTIVO NIVEL 1.";
-        }
-
-        function onScanSuccess(decodedText, decodedResult) {
-            if (!esHorarioHabilitado()) {
-                hablarYReproducir("Escáner bloqueado, fuera de horario", "error");
-                mostrarViñeta("ESCÁNER BLOQUEADO: Fuera de días y horarios de clase.", "error");
-                return;
-            }
-
-            const ahora = Date.now();
-            if (decodedText === ultimoQrEscaneado && ahora < tiempoBloqueo) return;
-            
-            ultimoQrEscaneado = decodedText;
-            tiempoBloqueo = ahora + 3000;
-
-            let alumno = alumnos.find(a => a.dni === decodedText.trim());
-
-            if (alumno) {
-                if (alumno.estado === "Presente") {
-                    hablarYReproducir(`${alumno.apellido}, ya está registrado`, "error");
-                    mostrarViñeta(`ALERTA: ${alumno.apellido} YA MARCO PRESENTE HOY.`, "warning");
-                    statusText.innerText = `⚠️ INTENTO DE DUPLICADO: ${alumno.apellido} ya está registrado.`;
-                    return;
-                }
-
-                guardarHistorial();
-                alumno.estado = "Presente";
+                const res = await fetch(SCRIPT_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "registrar", dni, nombre, apellido })
+                });
+                const r = await res.json();
                 
-                hablarYReproducir(`${alumno.apellido}, presente`, "success");
-                
-                mostrarViñeta(`¡PRESENTE! ${alumno.apellido}, ${alumno.nombre}`, "success");
-                statusText.innerText = `Último QR Leído: ${alumno.apellido} marcó asistencia.`;
-                localStorage.setItem('asistencia_qr_church', JSON.stringify(alumnos));
-                
-                const claseId = obtenerIdClaseActual();
-                if(claseId) localStorage.setItem('ultima_clase_id', claseId);
-                
-                actualizarTabla();
-            } else {
-                if (excluidosAnuales.includes(decodedText.trim())) {
-                    hablarYReproducir("Acceso denegado, alumno dado de baja", "error");
-                    mostrarViñeta("ACCESO DENEGADO: Alumno dado de baja definitiva por faltas.", "error");
+                if (r.status === "success") {
+                    mostrarViñeta("¡Registro guardado en la base de datos!", "success");
+                    document.getElementById('al-qr-box').classList.remove('hidden');
+                    document.getElementById('al-qr-box').classList.add('flex');
+                    document.getElementById('al-qrcode').innerHTML = "";
+                    new QRCode(document.getElementById('al-qrcode'), { text: dni, width: 150, height: 150, colorDark: "#1a365d" });
+                    document.getElementById('al-qr-label').innerText = `${apellido.toUpperCase()}, ${nombre}`;
                 } else {
-                    hablarYReproducir("Código no reconocido", "error");
-                    mostrarViñeta(`Código QR No Reconocido en el Padrón (${decodedText}).`, "error");
+                    mostrarViñeta(r.message, "error");
                 }
+            } catch(e) {
+                mostrarViñeta("Error de conexión a la nube", "error");
             }
-        }
-
-        btnRegistrarAlumno.addEventListener('click', () => {
-            const dniVal = regDni.value.trim();
-            const nomVal = regNombre.value.trim();
-            const apeVal = regApellido.value.trim();
-
-            if (!/^[0-9]{7,8}$/.test(dniVal)) {
-                mostrarViñeta("El DNI debe tener obligatoriamente 7 u 8 números.", "error");
-                return;
-            }
-            if (excluidosAnuales.includes(dniVal)) {
-                reproducirSonido('error');
-                mostrarViñeta("ERROR: DNI bloqueado por exceso de faltas.", "error");
-                return;
-            }
-            if (alumnos.some(a => a.dni === dniVal)) {
-                mostrarViñeta("Ese número de DNI ya está cargado.", "error");
-                return;
-            }
-
-            guardarHistorial();
-
-            alumnos.push({
-                apellido: apeVal,
-                nombre: nomVal,
-                dni: dniVal,
-                faltas: 0,
-                estado: "Ausente"
-            });
-
-            localStorage.setItem('asistencia_qr_church', JSON.stringify(alumnos));
-            actualizarTabla();
-            reproducirSonido('success');
-            mostrarViñeta(`Registrado con éxito. Creando credencial...`, "success");
-
-            qrcodeDiv.innerHTML = ""; 
-            new QRCode(qrcodeDiv, {
-                text: dniVal,
-                width: 160,
-                height: 160,
-                colorDark : "#1a365d",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
-            });
-
-            qrLabel.innerText = `${apeVal.toUpperCase()}, ${nomVal} - DNI ${dniVal}`;
-            qrResultBox.classList.remove('hidden');
-            qrResultBox.classList.add('flex');
-            document.getElementById('form-registro').reset();
+            document.getElementById('btn-alumno-registrar').innerText = "Registrarme y Crear mi QR";
+            document.getElementById('btn-alumno-registrar').disabled = false;
         });
 
-        btnDescargarQr.addEventListener('click', () => {
-            const qrImg = qrcodeDiv.querySelector('img');
-            if (qrImg) {
-                const link = document.createElement('a');
-                link.download = `QR_N1_${qrLabel.innerText.replace(/[\s,]+/g, '_')}.png`;
-                link.href = qrImg.src;
-                link.click();
+        document.getElementById('btn-al-descargar').addEventListener('click', () => {
+            const img = document.getElementById('al-qrcode').querySelector('img');
+            if(img) {
+                const a = document.createElement('a');
+                a.download = `Credencial_CCI_${document.getElementById('al-qr-label').innerText.replace(/\s+/g, '_')}.png`;
+                a.href = img.src;
+                a.click();
             }
         });
 
-        btnExportarExcel.addEventListener('click', async () => {
-            if (alumnos.length === 0) {
-                mostrarViñeta("No hay alumnos cargados para exportar.", "error");
-                return;
-            }
-
-            const matrizDatos = [
-                ["CLASE: NIVEL 1"], [], ["Apellido", "Nombre", "DNI", "Faltas", "Estado Actual"]
-            ];
-
-            alumnos.forEach(a => {
-                matrizDatos.push([a.apellido.toUpperCase(), a.nombre, a.dni, a.faltas, a.estado]);
-            });
-
-            const libro = XLSX.utils.book_new();
-            const hoja = XLSX.utils.aoa_to_sheet(matrizDatos);
-            hoja['!merges'] = [{ s: {r:0, c:0}, e: {r:0, c:4} }];
-
-            XLSX.utils.book_append_sheet(libro, hoja, "Asistencia N1");
-            const fecha = new Date().toISOString().slice(0,10);
-            const nombreArchivo = `Asistencia_NIVEL_1_${fecha}.xlsx`;
-
-            const excelBuffer = XLSX.write(libro, { bookType: 'xlsx', type: 'array' });
-            const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-            const archivo = new File([data], nombreArchivo, { type: data.type });
-
-            if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
-                try {
-                    await navigator.share({ files: [archivo], title: 'Asistencia Nivel 1', text: 'Planilla de asistencia.' });
-                    mostrarViñeta("Reporte compartido.", "success");
-                } catch (error) {}
-            } else {
-                XLSX.writeFile(libro, nombreArchivo);
-            }
-        });
-
-        btnExportarPdf.addEventListener('click', async () => {
-            if (alumnos.length === 0) {
-                mostrarViñeta("No hay alumnos en la planilla.", "error");
-                return;
-            }
-            const elementosNoExportables = document.querySelectorAll('.no-export, .download-actions');
-            elementosNoExportables.forEach(el => el.style.visibility = 'hidden');
-
-            const elementoAImprimir = document.getElementById('area-impresion-pdf');
-            const fecha = new Date().toLocaleDateString().replace(/\//g, '-');
-            const nombreArchivo = `Reporte_Asistencia_Nivel1_${fecha}.pdf`;
-
-            const opcionesConfig = {
-                margin:       15,
-                filename:     nombreArchivo,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            html2pdf().from(elementoAImprimir).set(opcionesConfig).outputPdf('blob').then(async (pdfBlob) => {
-                elementosNoExportables.forEach(el => el.style.visibility = 'visible');
-                const archivo = new File([pdfBlob], nombreArchivo, { type: 'application/pdf' });
-
-                if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
-                    try {
-                        await navigator.share({ files: [archivo], title: 'Reporte PDF', text: 'Asistencia Nivel 1.' });
-                        mostrarViñeta("PDF compartido con éxito.", "success");
-                    } catch (error) {}
-                } else {
-                    html2pdf().from(elementoAImprimir).set(opcionesConfig).save();
-                }
-            });
-        });
-
-        window.modificarManualDirecto = function(index, nuevoEstado) {
-            guardarHistorial();
-            alumnos[index].estado = nuevoEstado;
-            if (nuevoEstado === "Ausente") {
-                alumnos[index].faltas += 1;
-                verificarBajaAutomatica(index);
-            } else {
-                localStorage.setItem('asistencia_qr_church', JSON.stringify(alumnos));
+        // LÓGICA MODO ADMINISTRADOR: Cargar y sincronizar con Nube
+        async function cargarDatosDesdeSheets() {
+            try {
+                const r = await fetch(SCRIPT_URL);
+                alumnos = await r.json();
                 actualizarTabla();
-                mostrarViñeta(`Modificación guardada.`, "success");
-            }
-        };
-
-        window.cambiarFaltasManual = function(index, cantidad) {
-            guardarHistorial();
-            alumnos[index].faltas = parseInt(cantidad) || 0;
-            verificarBajaAutomatica(index);
-        };
-
-        function verificarBajaAutomatica(index) {
-            const alumno = alumnos[index];
-            if (alumno.faltas >= 3) {
-                reproducirSonido('error');
-                if (!excluidosAnuales.includes(alumno.dni)) {
-                    excluidosAnuales.push(alumno.dni);
-                }
-                localStorage.setItem('excluidos_anual', JSON.stringify(excluidosAnuales));
-                alert(`ALUMNO DADO DE BAJA: ${alumno.apellido} acumuló 3 faltas.`);
-                alumnos.splice(index, 1);
-            }
-            localStorage.setItem('asistencia_qr_church', JSON.stringify(alumnos));
-            actualizarTabla();
-        }
-
-        window.eliminarAlumno = function(index) {
-            if (confirm(`¿Eliminar por completo a ${alumnos[index].apellido}?`)) {
-                guardarHistorial();
-                alumnos.splice(index, 1);
-                localStorage.setItem('asistencia_qr_church', JSON.stringify(alumnos));
-                actualizarTabla();
-                mostrarViñeta("Alumno removido.", "success");
-            }
-        };
-
-        window.reiniciarSistema = function() {
-            if (confirm("⚠️ ¿Estás seguro de vaciar por completo el padrón e historial de Nivel 1?")) {
-                localStorage.clear();
-                location.reload();
+                document.getElementById('status').innerText = "SISTEMA CCI ONLINE: DATOS SINCRONIZADOS.";
+            } catch (e) {
+                document.getElementById('status').innerText = "🔴 ERROR DE CONEXIÓN AL SERVIDOR.";
             }
         }
 
         function actualizarTabla() {
-            alumnos.sort((a, b) => `${a.apellido} ${a.nombre}`.localeCompare(`${b.apellido} ${b.nombre}`));
-            cuerpoTabla.innerHTML = "";
-            alumnos.forEach((alumno, index) => {
+            const tbody = document.getElementById('cuerpo-tabla');
+            tbody.innerHTML = "";
+            alumnos.sort((a,b) => a.apellido.localeCompare(b.apellido)).forEach((al, idx) => {
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50/80 transition-colors";
-                
-                let clasesBadge = alumno.estado === "Presente" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700";
-                let estiloFila = alumno.faltas === 2 ? 'class="bg-amber-50/60"' : '';
-
+                tr.className = "hover:bg-slate-50 border-b border-slate-100";
                 tr.innerHTML = `
-                    <td ${estiloFila} class="p-4 font-medium text-slate-900"><strong>${alumno.apellido.toUpperCase()}</strong>, ${alumno.nombre}</td>
-                    <td ${estiloFila} class="p-4 text-slate-500 font-mono">${alumno.dni}</td>
-                    <td ${estiloFila} class="p-4 text-center">
-                        <input type="number" min="0" max="3" value="${alumno.faltas}" onchange="cambiarFaltasManual(${index}, this.value)" 
-                               class="w-12 p-1.5 border border-slate-200 text-center rounded-md font-semibold bg-white focus:outline-none focus:border-pink-500">
-                    </td>
-                    <td ${estiloFila} class="p-4"><span class="px-2.5 py-1 rounded-md text-xs font-bold uppercase ${clasesBadge}">${alumno.estado}</span></td>
-                    <td ${estiloFila} class="p-4 no-export">
-                        <select onchange="modificarManualDirecto(${index}, this.value)" 
-                                class="p-1.5 bg-white border border-slate-200 text-slate-700 rounded-md text-xs font-medium focus:outline-none focus:border-pink-500">
-                            <option value="Presente" ${alumno.estado === 'Presente' ? 'selected' : ''}>Presente</option>
-                            <option value="Ausente" ${alumno.estado === 'Ausente' ? 'selected' : ''}>Ausente</option>
+                    <td class="p-3 font-semibold">${al.apellido.toUpperCase()}, ${al.nombre}</td>
+                    <td class="p-3 text-slate-500 font-mono">${al.dni}</td>
+                    <td class="p-3 text-center font-bold">${al.faltas}</td>
+                    <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${al.estado==='Presente'?'bg-emerald-100 text-emerald-800':'bg-red-100 text-red-800'}">${al.estado}</span></td>
+                    <td class="p-3 no-export">
+                        <select onchange="modificarDesdeAdmin(${idx}, this.value)" class="p-1 border rounded text-xs bg-white">
+                            <option value="Presente" ${al.estado==='Presente'?'selected':''}>Presente</option>
+                            <option value="Ausente" ${al.estado==='Ausente'?'selected':''}>Ausente</option>
                         </select>
                     </td>
-                    <td ${estiloFila} class="p-4 no-export text-center">
-                        <button onclick="eliminarAlumno(${index})" class="text-xs font-bold text-white bg-red-500 hover:bg-red-600 px-2.5 py-1.5 rounded-md transition-colors shadow-sm transform active:scale-[0.96]">🗑️ Borrar</button>
-                    </td>
                 `;
-                cuerpoTabla.appendChild(tr);
+                tbody.appendChild(tr);
             });
         }
 
-        window.onload = inicializar;
+        async function modificarDesdeAdmin(idx, nuevoEstado) {
+            const al = alumnos[idx];
+            al.estado = nuevoEstado;
+            document.getElementById('status').innerText = "Guardando cambio en Google Sheets...";
+            
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "actualizar", dni: al.dni, faltas: al.faltas, estado: nuevoEstado })
+                });
+                mostrarViñeta("Sincronizado con éxito", "success");
+            } catch(e) {
+                mostrarViñeta("Error al guardar en la nube", "error");
+            }
+            cargarDatosDesdeSheets();
+        }
+
+        // ESCÁNER QR EN LA ENTRADA CON RESTRICCIÓN DE HORARIOS Y PITIDOS
+        function inicializarEscaner() {
+            const scan = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 200 });
+            scan.render(async (dniLeido) => {
+                
+                // 1. Validar si está en un día y horario de clase permitido
+                if (!verificarHorarioValido()) {
+                    emitirPitido('error');
+                    mostrarViñeta("Escaneo bloqueado: Fuera del día u horario de clases establecido.", "error");
+                    return;
+                }
+
+                let al = alumnos.find(a => a.dni === dniLeido.trim());
+                if (al) {
+                    if (al.estado === "Presente") {
+                        emitirPitido('advertencia'); // Pitido de advertencia
+                        mostrarViñeta(`${al.apellido} ya marcó presente hoy.`, "warning");
+                        return;
+                    }
+                    
+                    emitirPitido('exito'); // Pitido de éxito ("Presente")
+                    mostrarViñeta(`Presente: ${al.apellido}, ${al.nombre}`, "success");
+                    
+                    await fetch(SCRIPT_URL, {
+                        method: "POST",
+                        body: JSON.stringify({ action: "actualizar", dni: al.dni, faltas: al.faltas, estado: "Presente" })
+                    });
+                    cargarDatosDesdeSheets();
+                } else {
+                    emitirPitido('error'); // Pitido grave de error
+                    mostrarViñeta("DNI no encontrado en el padrón", "error");
+                }
+            });
+        }
+
+        // DESCARGAS (EXCEL Y PDF)
+        document.getElementById('btn-excel').addEventListener('click', () => {
+            const s = XLSX.utils.json_to_sheet(alumnos);
+            const b = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(b, s, "Asistencia N1");
+            XLSX.writeFile(b, "Asistencia_Nivel1.xlsx");
+        });
+
+        document.getElementById('btn-pdf').addEventListener('click', () => {
+            const d = document.querySelectorAll('.no-export, .download-actions');
+            d.forEach(el => el.style.visibility = 'hidden');
+            html2pdf().from(document.getElementById('area-impresion-pdf')).save().then(() => {
+                d.forEach(el => el.style.visibility = 'visible');
+            });
+        });
     </script>
 </body>
-</html>
+    </html>
+    
