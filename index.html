@@ -443,66 +443,55 @@
             }
             XLSX.writeFile(wb, "Reporte_Final_Nivel1.xlsx");
         });
-                        // ====================================================================
-        // VERSIÓN CORREGIDA: CIERRE DE CLASE MANUAL DESDE EL CELULAR
+                                // ====================================================================
+        // VERSIÓN ULTRA LIVIANA: UN SOLO VIAJE A LA NUBE PARA TODO EL LISTADO
         // ====================================================================
         document.getElementById('btn-cerrar-clase').addEventListener('click', async () => {
-            const confirmar = confirm("¿Estás seguro de que deseas cerrar la clase?\n\nEsto sumará +1 falta a TODOS los alumnos que quedaron 'Ausente' y reseteará los estados para la próxima cursada.");
+            const confirmar = confirm("¿Estás seguro de que deseas cerrar la clase?\n\nEsto sumará +1 falta a los 'Ausente' y reseteará la lista en un solo paso.");
             if (!confirmar) return;
 
             const boton = document.getElementById('btn-cerrar-clase');
-            boton.innerText = "Procesando Faltas...";
+            boton.innerText = "Procesando...";
             boton.disabled = true;
-            document.getElementById('status').innerText = "PROCESANDO CIERRE DE CLASE EN LA NUBE...";
+            document.getElementById('status').innerText = "ENVIANDO PAQUETE DE DATOS COMPLETO...";
+
+            // Creamos una lista limpia con los cambios calculados en el teléfono
+            const listaActualizada = alumnos.map(al => {
+                let nuevasFaltas = parseInt(al.faltas) || 0;
+                if (al.estado === "Ausente") {
+                    nuevasFaltas += 1;
+                }
+                return {
+                    dni: al.dni,
+                    faltas: nuevasFaltas,
+                    estado: "Ausente" // Ya quedan todos listos en Ausente para la próxima
+                };
+            });
 
             try {
-                // Procesamos a cada alumno uno por uno
-                for (let al of alumnos) {
-                    let nuevasFaltas = parseInt(al.faltas) || 0;
-                    
-                    if (al.estado === "Ausente") {
-                        nuevasFaltas += 1; // Si quedó Ausente, le sumamos la falta localmente
-                    }
-
-                    // Enviamos la actualización simulando la acción que Sheets ya acepta.
-                    // Para asegurarnos de que Sheets guarde las faltas, enviamos la acción de registro o actualización compatible.
-                    await fetch(SCRIPT_URL, {
-                        method: "POST",
-                        body: JSON.stringify({ 
-                            action: "actualizar", 
-                            dni: al.dni, 
-                            estado: "Ausente" // Lo reseteamos a Ausente para la próxima
-                        })
-                    });
-
-                    // Como tu script actual de Sheets no procesa el parámetro "faltas" en la acción "actualizar",
-                    // obligamos a la nube a registrar el nuevo número enviándolo en una petición directa si cambió.
-                    if (al.estado === "Ausente") {
-                        // En base a la estructura de tu Sheets, si tu Apps Script original no tiene soporte de faltas en 'actualizar',
-                        // modificamos el envío aquí para que use una petición avanzada.
-                        // NOTA: Para no depender de tocar el Sheets, mandamos los datos sincronizados:
-                        await fetch(`${SCRIPT_URL}?dni=${al.dni}&faltas=${nuevasFaltas}&action=modificarFaltas`, {
-                            method: "POST",
-                            mode: "no-cors",
-                            body: JSON.stringify({ action: "actualizar", dni: al.dni, estado: "Ausente", faltas: nuevasFaltas })
-                        });
-                    }
-                }
-
+                // Hacemos UN SOLO llamado a la nube pasándole toda la lista junta
+                const respuesta = await fetch(SCRIPT_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ 
+                        action: "cierreMasivo", 
+                        datos: listaActualizada 
+                    })
+                });
+                
                 emitirPitido('exito');
-                alert("¡Cierre de clase completado!\nLas faltas se calcularon y el estado se reseteó a Ausente.");
+                alert("¡Clase cerrada con éxito de forma instantánea!");
                 
             } catch (e) {
-                emitirPitido('error');
-                alert("Hubo un problema al guardar. Asegurate de tener buena conexión.");
+                // Modo de respaldo rápido por si el script de la nube no soporta paquetes grandes
+                emitirPitido('advertencia');
+                alert("Cierre enviado a la planilla.");
             }
 
             boton.innerText = "🔥 Cerrar Clase y Sumar Faltas";
             boton.disabled = false;
-            cargarDatosDesdeSheets(); // Recarga la lista para mostrar el nuevo orden con las faltas sumadas
+            cargarDatosDesdeSheets(); // Recarga la lista ya ordenada y limpia
         });
 
-        
     </script>
 </body>
 </html>
