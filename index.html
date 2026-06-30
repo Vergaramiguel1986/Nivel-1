@@ -99,9 +99,7 @@
                         <button class="bg-[#1f7244] text-white font-bold py-2 px-3 rounded-lg text-xs" id="btn-excel">🟢 Todo (Excel)</button>
                         <button class="bg-[#c0392b] text-white font-bold py-2 px-3 rounded-lg text-xs" id="btn-pdf">🔴 Reporte PDF</button>
                         <button class="bg-[#8e44ad] text-white font-bold py-2 px-3 rounded-lg text-xs" id="btn-faltas">📊 Separar por Faltas (Excel)</button>
-                        <!-- NUEVO BOTÓN PARA EL CIERRE AUTOMÁTICO -->
-                        <button class="bg-[#e67e22] hover:bg-[#d35400] text-white font-bold py-2 px-3 rounded-lg text-xs uppercase tracking-wide shadow transition-all" id="btn-cerrar-clase">🔥 Cerrar Clase y Sumar Faltas</button>
-                    </div>
+                        </div>
 <div class="overflow-x-auto rounded-xl border border-slate-100">
                         <table class="w-full text-left border-collapse text-xs">
                             <thead>
@@ -443,54 +441,7 @@
             }
             XLSX.writeFile(wb, "Reporte_Final_Nivel1.xlsx");
         });
-                                // ====================================================================
-        // VERSIÓN ULTRA LIVIANA: UN SOLO VIAJE A LA NUBE PARA TODO EL LISTADO
-        // ====================================================================
-        document.getElementById('btn-cerrar-clase').addEventListener('click', async () => {
-            const confirmar = confirm("¿Estás seguro de que deseas cerrar la clase?\n\nEsto sumará +1 falta a los 'Ausente' y reseteará la lista en un solo paso.");
-            if (!confirmar) return;
-
-            const boton = document.getElementById('btn-cerrar-clase');
-            boton.innerText = "Procesando...";
-            boton.disabled = true;
-            document.getElementById('status').innerText = "ENVIANDO PAQUETE DE DATOS COMPLETO...";
-
-            // Creamos una lista limpia con los cambios calculados en el teléfono
-            const listaActualizada = alumnos.map(al => {
-                let nuevasFaltas = parseInt(al.faltas) || 0;
-                if (al.estado === "Ausente") {
-                    nuevasFaltas += 1;
-                }
-                return {
-                    dni: al.dni,
-                    faltas: nuevasFaltas,
-                    estado: "Ausente" // Ya quedan todos listos en Ausente para la próxima
-                };
-            });
-
-            try {
-                // Hacemos UN SOLO llamado a la nube pasándole toda la lista junta
-                const respuesta = await fetch(SCRIPT_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ 
-                        action: "cierreMasivo", 
-                        datos: listaActualizada 
-                    })
-                });
-                
-                emitirPitido('exito');
-                alert("¡Clase cerrada con éxito de forma instantánea!");
-                
-            } catch (e) {
-                // Modo de respaldo rápido por si el script de la nube no soporta paquetes grandes
-                emitirPitido('advertencia');
-                alert("Cierre enviado a la planilla.");
-            }
-
-            boton.innerText = "🔥 Cerrar Clase y Sumar Faltas";
-            boton.disabled = false;
-            cargarDatosDesdeSheets(); // Recarga la lista ya ordenada y limpia
-        });
+                                
 
     </script>
 </body>
