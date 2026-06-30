@@ -12,7 +12,6 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <style>
-        /* Efecto Marca de Agua sutil con el LOGO OFICIAL DE CCI */
         body::before {
             content: "";
             position: fixed;
@@ -95,6 +94,11 @@
                 <div id="area-impresion-pdf" class="w-full bg-white">
                     <h2 class="text-lg font-bold text-slate-800 mb-1">Planilla en Tiempo Real (Nivel 1)</h2>
                     
+                    <!-- NUEVO: Buscador rápido para manejar el volumen de 250 alumnos -->
+                    <div class="my-3 no-export">
+                        <input type="text" id="buscador-alumnos" placeholder="🔍 Buscar por Apellido o DNI..." class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:border-pink-500 focus:outline-none shadow-inner">
+                    </div>
+
                     <div class="flex flex-wrap gap-2 my-4 download-actions">
                         <button class="bg-[#1f7244] text-white font-bold py-2 px-3 rounded-lg text-xs" id="btn-excel">🟢 Todo (Excel)</button>
                         <button class="bg-[#c0392b] text-white font-bold py-2 px-3 rounded-lg text-xs" id="btn-pdf">🔴 Reporte PDF</button>
@@ -121,72 +125,40 @@
     </div>
 
     <script>
-        // --- URL DE EXEC DE GOOGLE SHEETS ---
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyU131QEp0Ihv1uergOh0iOyLjB3OYddweU7mF7oDP1mUh3Qq7aTKNv9LPg4EupQg_e/exec";
 
         let alumnos = [];
         const urlParams = new URLSearchParams(window.location.search);
         const esAdmin = urlParams.get('admin') === 'true';
 
-        // Sistema de pitidos limpios (Beeps)
         function emitirPitido(tipo = 'exito') {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 const oscillator = audioCtx.createOscillator();
                 const gainNode = audioCtx.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                
+                oscillator.connect(gainNode); gainNode.connect(audioCtx.destination);
                 if (tipo === 'exito') {
-                    oscillator.type = 'sine';
-                    oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); 
-                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                    oscillator.start();
-                    oscillator.stop(audioCtx.currentTime + 0.15);
+                    oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); 
+                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.15);
                 } else if (tipo === 'advertencia') {
-                    oscillator.type = 'sine';
-                    oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
-                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                    oscillator.start();
-                    oscillator.stop(audioCtx.currentTime + 0.1);
-                    
+                    oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
+                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.1);
                     setTimeout(() => {
-                        const osc2 = audioCtx.createOscillator();
-                        const gain2 = audioCtx.createGain();
-                        osc2.connect(gain2); gain2.connect(audioCtx.destination);
-                        osc2.frequency.setValueAtTime(600, audioCtx.currentTime);
-                        gain2.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                        osc2.start(); osc2.stop(audioCtx.currentTime + 0.1);
+                        const osc2 = audioCtx.createOscillator(); const gain2 = audioCtx.createGain();
+                        osc2.connect(gain2); gain2.connect(audioCtx.destination); osc2.frequency.setValueAtTime(600, audioCtx.currentTime);
+                        gain2.gain.setValueAtTime(0.1, audioCtx.currentTime); osc2.start(); osc2.stop(audioCtx.currentTime + 0.1);
                     }, 150);
                 } else if (tipo === 'error') {
-                    oscillator.type = 'sawtooth';
-                    oscillator.frequency.setValueAtTime(220, audioCtx.currentTime); 
-                    gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
-                    oscillator.start();
-                    oscillator.stop(audioCtx.currentTime + 0.35);
+                    oscillator.type = 'sawtooth'; oscillator.frequency.setValueAtTime(220, audioCtx.currentTime); 
+                    gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime); oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.35);
                 }
-            } catch (e) {
-                console.log("Audio Bloqueado.");
-            }
+            } catch (e) { console.log("Audio Bloqueado."); }
         }
 
-        // Verificación de días y horarios requeridos
         function verificarHorarioValido() {
-            const ahora = new Date();
-            const diaSemana = accessed = ahora.getDay(); 
-            const horaActual = ahora.getHours() + (ahora.getMinutes() / 60);
-
-            if (diaSemana === 0) { // Domingo
-                if ((horaActual >= 9.5 && horaActual <= 12.0) || (horaActual >= 17.0 && horaActual <= 22.5)) {
-                    return true;
-                }
-            }
-            if (diaSemana === 5) { // Viernes
-                if (horaActual >= 19.0 && horaActual <= 22.5) {
-                    return true;
-                }
-            }
+            const ahora = new Date(); const diaSemana = ahora.getDay(); const horaActual = ahora.getHours() + (ahora.getMinutes() / 60);
+            if (diaSemana === 0) { if ((horaActual >= 9.5 && horaActual <= 12.0) || (horaActual >= 17.0 && horaActual <= 22.5)) return true; }
+            if (diaSemana === 5) { if (horaActual >= 19.0 && horaActual <= 22.5) return true; }
             return false;
         }
 
@@ -200,18 +172,12 @@
         }
 
         function flashearCartelGigante(texto, tipo) {
-            const cartel = document.getElementById('cartel-gigante');
-            const txt = document.getElementById('cartel-texto-grande');
+            const cartel = document.getElementById('cartel-gigante'); const txt = document.getElementById('cartel-texto-grande');
             cartel.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-800', 'border-emerald-300', 'bg-red-100', 'text-red-800', 'border-red-300', 'bg-amber-100', 'text-amber-800', 'border-amber-300');
-            
             txt.innerText = texto;
-            if (tipo === 'exito') {
-                cartel.className = "mt-4 p-4 rounded-xl text-center font-extrabold uppercase transition-all border duration-300 bg-emerald-100 text-emerald-800 border-emerald-300 block animate-bounce";
-            } else if (tipo === 'advertencia') {
-                cartel.className = "mt-4 p-4 rounded-xl text-center font-extrabold uppercase transition-all border duration-300 bg-amber-100 text-amber-800 border-amber-300 block";
-            } else {
-                cartel.className = "mt-4 p-4 rounded-xl text-center font-extrabold uppercase transition-all border duration-300 bg-red-100 text-red-800 border-red-300 block";
-            }
+            if (tipo === 'exito') cartel.className = "mt-4 p-4 rounded-xl text-center font-extrabold uppercase transition-all border duration-300 bg-emerald-100 text-emerald-800 border-emerald-300 block animate-bounce";
+            else if (tipo === 'advertencia') cartel.className = "mt-4 p-4 rounded-xl text-center font-extrabold uppercase transition-all border duration-300 bg-amber-100 text-amber-800 border-amber-300 block";
+            else cartel.className = "mt-4 p-4 rounded-xl text-center font-extrabold uppercase transition-all border duration-300 bg-red-100 text-red-800 border-red-300 block";
             setTimeout(() => { cartel.classList.add('hidden'); }, 3500);
         }
 
@@ -225,103 +191,65 @@
             document.getElementById('vista-alumno').classList.add('flex');
         }
 
-        // REGISTRO DE ALUMNOS (FUEGOS ARTIFICIALES Y BLOQUEO INTEGRADO)
         document.getElementById('btn-alumno-registrar').addEventListener('click', async () => {
             const dni = document.getElementById('al-dni').value.trim();
             const nombre = document.getElementById('al-nombre').value.trim();
             const apellido = document.getElementById('al-apellido').value.trim();
-
             if(!/^[0-9]{7,8}$/.test(dni)) return mostrarViñeta("DNI Inválido (Solo números de 7 u 8 dígitos)", "error");
             if(!nombre || !apellido) return mostrarViñeta("Faltan datos", "error");
-
             document.getElementById('btn-alumno-registrar').innerText = "Procesando...";
             document.getElementById('btn-alumno-registrar').disabled = true;
-
             try {
-                const res = await fetch(SCRIPT_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: "registrar", dni, nombre, apellido })
-                });
+                const res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "registrar", dni, nombre, apellido }) });
                 const r = await res.json();
-                
                 if (r.status === "success") {
                     confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
                     document.getElementById('form-alumno').classList.add('hidden');
-                    document.getElementById('al-qr-box').classList.remove('hidden');
-                    document.getElementById('al-qr-box').classList.add('flex');
-                    document.getElementById('al-qrcode').innerHTML = "";
-                    new QRCode(document.getElementById('al-qrcode'), { text: dni, width: 150, height: 150, colorDark: "#1a365d" });
-                    
-                    document.getElementById('al-qr-box').querySelector('span').innerHTML = 
-                        "<div class='animate-bounce text-2xl mb-2'>🎉</div>" +
-                        "<div class='text-lg font-black text-pink-700 uppercase'>¡Registro exitoso!</div>" +
-                        "<div class='text-xs text-slate-500 mb-4 font-normal lowercase tracking-wide'>¡Bienvenido a Nivel 1! Capturá o guardá tu QR</div>";
-                        
+                    document.getElementById('al-qr-box').classList.remove('hidden'); document.getElementById('al-qr-box').classList.add('flex');
+                    document.getElementById('al-qrcode').innerHTML = ""; new QRCode(document.getElementById('al-qrcode'), { text: dni, width: 150, height: 150, colorDark: "#1a365d" });
+                    document.getElementById('al-qr-box').querySelector('span').innerHTML = "<div class='animate-bounce text-2xl mb-2'>🎉</div><div class='text-lg font-black text-pink-700 uppercase'>¡Registro exitoso!</div><div class='text-xs text-slate-500 mb-4 font-normal lowercase tracking-wide'>¡Bienvenido a Nivel 1! Capturá o guardá tu QR</div>";
                     document.getElementById('al-qr-label').innerText = `${apellido.toUpperCase()}, ${nombre}`;
-                } else {
-                    mostrarViñeta(r.message, "error");
-                }
-            } catch(e) {
-                mostrarViñeta("Error de conexión a la nube", "error");
-            }
-            document.getElementById('btn-alumno-registrar').innerText = "Registrarme y Crear mi QR";
-            document.getElementById('btn-alumno-registrar').disabled = false;
+                } else { mostrarViñeta(r.message, "error"); }
+            } catch(e) { mostrarViñeta("Error de conexión a la nube", "error"); }
+            document.getElementById('btn-alumno-registrar').innerText = "Registrarme y Crear mi QR"; document.getElementById('btn-alumno-registrar').disabled = false;
         });
 
-        // DESCARGA DE QR COMPATIBLE CON FONDO BLANCO PURO
         document.getElementById('btn-al-descargar').addEventListener('click', () => {
             const qrCanvas = document.getElementById('al-qrcode').querySelector('canvas');
             if (qrCanvas) {
-                const nuevoCanvas = document.createElement('canvas');
-                nuevoCanvas.width = qrCanvas.width;
-                nuevoCanvas.height = qrCanvas.height;
-                const ctx = nuevoCanvas.getContext('2d');
-                
-                ctx.fillStyle = '#FFFFFF';
-                ctx.fillRect(0, 0, nuevoCanvas.width, nuevoCanvas.height);
-                ctx.drawImage(qrCanvas, 0, 0);
-                
-                const a = document.createElement('a');
-                a.download = `Credencial_CCI_${document.getElementById('al-qr-label').innerText.replace(/\s+/g, '_')}.png`;
-                a.href = nuevoCanvas.toDataURL('image/png', 1.0);
-                a.click();
+                const nuevoCanvas = document.createElement('canvas'); nuevoCanvas.width = qrCanvas.width; nuevoCanvas.height = qrCanvas.height;
+                const ctx = nuevoCanvas.getContext('2d'); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, nuevoCanvas.width, nuevoCanvas.height); ctx.drawImage(qrCanvas, 0, 0);
+                const a = document.createElement('a'); a.download = `Credencial_CCI_${document.getElementById('al-qr-label').innerText.replace(/\s+/g, '_')}.png`; a.href = nuevoCanvas.toDataURL('image/png', 1.0); a.click();
             }
         });
 
-        // CONTROL DE ASISTENCIA (COORDINACIÓN)
         async function cargarDatosDesdeSheets() {
             try {
-                const r = await fetch(SCRIPT_URL);
-                alumnos = await r.json();
+                const r = await fetch(SCRIPT_URL); alumnos = await r.json();
                 actualizarTabla();
                 document.getElementById('status').innerText = "SISTEMA CCI ONLINE: DATOS SINCRONIZADOS.";
-            } catch (e) {
-                document.getElementById('status').innerText = "🔴 ERROR DE CONEXIÓN AL SERVIDOR.";
-            }
+            } catch (e) { document.getElementById('status').innerText = "🔴 ERROR DE CONEXIÓN AL SERVIDOR."; }
         }
 
         function actualizarTabla() {
             const tbody = document.getElementById('cuerpo-tabla');
             tbody.innerHTML = "";
+            const filtro = document.getElementById('buscador-alumnos').value.toLowerCase().trim();
             
-            // ---------------------------------------------------------
-            // CORRECCIÓN FIJA: ORDENAR DE MENOR A MAYOR FALTAS, Y LUEGO ALFABÉTICO
-            // ---------------------------------------------------------
+            // Doble Ordenamiento (Faltas de menor a mayor + Apellido alfabético)
             alumnos.sort((a, b) => {
-                const faltasA = parseInt(a.faltas) || 0;
-                const faltasB = parseInt(b.faltas) || 0;
-
-                // 1º Criterio: Si las faltas son distintas, van de menos a más
-                if (faltasA !== faltasB) {
-                    return faltasA - faltasB;
-                }
-
-                // 2º Criterio: Si empatan en faltas, desempata el abecedario por Apellido
+                const faltasA = parseInt(a.faltas) || 0; const faltasB = parseInt(b.faltas) || 0;
+                if (faltasA !== faltasB) return faltasA - faltasB;
                 return a.apellido.localeCompare(b.apellido);
             });
-            // ---------------------------------------------------------
 
             alumnos.forEach((al, idx) => {
+                // Filtro del buscador en tiempo real
+                const coincideNombre = al.nombre.toLowerCase().includes(filtro);
+                const coincideApellido = al.apellido.toLowerCase().includes(filtro);
+                const coincideDni = al.dni.toString().includes(filtro);
+                if (filtro && !coincideNombre && !coincideApellido && !coincideDni) return;
+
                 const tr = document.createElement('tr');
                 let colorFila = "hover:bg-slate-50";
                 let badgeEstado = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${al.estado==='Presente'?'bg-emerald-100 text-emerald-800':'bg-slate-100 text-slate-700'}">${al.estado}</span>`;
@@ -351,15 +279,14 @@
             });
         }
 
+        // Ejecutar filtro al escribir en el buscador
+        document.getElementById('buscador-alumnos').addEventListener('input', actualizarTabla);
+
         async function modificarDesdeAdmin(idx, nuevoEstado) {
-            const al = alumnos[idx];
-            al.estado = nuevoEstado;
+            const al = alumnos[idx]; al.estado = nuevoEstado;
             document.getElementById('status').innerText = "Guardando cambio en Google Sheets...";
             try {
-                await fetch(SCRIPT_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: "actualizar", dni: al.dni, faltas: al.faltas, estado: nuevoEstado })
-                });
+                await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "actualizar", dni: al.dni, faltas: al.faltas, estado: nuevoEstado }) });
                 mostrarViñeta("Sincronizado con éxito", "success");
             } catch(e) { mostrarViñeta("Error al guardar en la nube", "error"); }
             cargarDatosDesdeSheets();
@@ -368,78 +295,39 @@
         function inicializarEscaner() {
             const scan = new Html5QrcodeScanner("reader", { fps: 12, qrbox: 200 });
             scan.render(async (dniLeido) => {
-                
-                // CONTROL DE HORARIO
                 if (!verificarHorarioValido()) {
-                    emitirPitido('error');
-                    mostrarViñeta("Escaneo denegado: Fuera de horario.", "error");
-                    flashearCartelGigante("FUERA DE HORARIO", "error");
-                    return;
+                    emitirPitido('error'); mostrarViñeta("Escaneo denegado: Fuera de horario.", "error"); flashearCartelGigante("FUERA DE HORARIO", "error"); return;
                 }
-
                 let al = alumnos.find(a => a.dni === dniLeido.trim());
                 if (al) {
                     if (al.estado === "Presente") {
-                        emitirPitido('advertencia');
-                        mostrarViñeta(`${al.apellido} ya tiene el presente.`, "warning");
-                        flashearCartelGigante(`REPETIDO: ${al.apellido}`, "advertencia");
-                        return;
+                        emitirPitido('advertencia'); mostrarViñeta(`${al.apellido} ya tiene el presente.`, "warning"); flashearCartelGigante(`REPETIDO: ${al.apellido}`, "advertencia"); return;
                     }
-
-                    // CONTROL DE ALUMNOS LIBRES (BLOQUEADO TOTALMENTE CON EL RETURN NUEVO)
                     if (al.faltas >= 4) {
-                        emitirPitido('error');
-                        mostrarViñeta("Atención: Alumno en condición de LIBRE. Ingreso denegado.", "error");
-                        flashearCartelGigante(`🛑 LIBRE: ${al.apellido}`, "error");
-                        return; 
+                        emitirPitido('error'); mostrarViñeta("Atención: Alumno en condición de LIBRE. Ingreso denegado.", "error"); flashearCartelGigante(`🛑 LIBRE: ${al.apellido}`, "error"); return; 
                     }
-
-                    emitirPitido('exito');
-                    mostrarViñeta(`Presente: ${al.apellido}, ${al.nombre}`, "success");
-                    flashearCartelGigante(`✅ ${al.apellido}, ${al.nombre}`, "exito");
-                    
-                    await fetch(SCRIPT_URL, {
-                        method: "POST",
-                        body: JSON.stringify({ action: "actualizar", dni: al.dni, faltas: al.faltas, estado: "Presente" })
-                    });
+                    emitirPitido('exito'); mostrarViñeta(`Presente: ${al.apellido}, ${al.nombre}`, "success"); flashearCartelGigante(`✅ ${al.apellido}, ${al.nombre}`, "exito");
+                    await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "actualizar", dni: al.dni, faltas: al.faltas, estado: "Presente" }) });
                     cargarDatosDesdeSheets();
                 } else {
-                    emitirPitido('error');
-                    mostrarViñeta("DNI no registrado.", "error");
-                    flashearCartelGigante("DNI DESCONOCIDO", "error");
+                    emitirPitido('error'); mostrarViñeta("DNI no registrado.", "error"); flashearCartelGigante("DNI DESCONOCIDO", "error");
                 }
             });
         }
 
-        // REPORTES
         document.getElementById('btn-excel').addEventListener('click', () => {
-            const s = XLSX.utils.json_to_sheet(alumnos);
-            const b = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(b, s, "Asistencia N1");
-            XLSX.writeFile(b, "Asistencia_Nivel1.xlsx");
+            const s = XLSX.utils.json_to_sheet(alumnos); const b = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(b, s, "Asistencia N1"); XLSX.writeFile(b, "Asistencia_Nivel1.xlsx");
         });
 
         document.getElementById('btn-pdf').addEventListener('click', () => {
-            const d = document.querySelectorAll('.no-export, .download-actions');
-            d.forEach(el => el.style.visibility = 'hidden');
-            html2pdf().from(document.getElementById('area-impresion-pdf')).save().then(() => {
-                d.forEach(el => el.style.visibility = 'visible');
-            });
+            const d = document.querySelectorAll('.no-export, .download-actions'); d.forEach(el => el.style.visibility = 'hidden');
+            html2pdf().from(document.getElementById('area-impresion-pdf')).save().then(() => { d.forEach(el => el.style.visibility = 'visible'); });
         });
 
-        // SCRIPT PARA SEPARAR REGULARES Y LIBRES EN PESTAÑAS (BOTÓN MORADO)
         document.getElementById('btn-faltas').addEventListener('click', () => {
-            const regulars = alumnos.filter(a => a.faltas < 4);
-            const libres = alumnos.filter(a => a.faltas >= 4);
-            const wb = XLSX.utils.book_new();
-            
-            if (regulars.length > 0) {
-                const wsReg = XLSX.utils.json_to_sheet(regulars);
-                XLSX.utils.book_append_sheet(wb, wsReg, "Alumnos Regulares");
-            }
-            if (libres.length > 0) {
-                const wsLib = XLSX.utils.json_to_sheet(libres);
-                XLSX.utils.book_append_sheet(wb, wsLib, "Alumnos Libres");
-            }
+            const regulars = alumnos.filter(a => a.faltas < 4); const libres = alumnos.filter(a => a.faltas >= 4); const wb = XLSX.utils.book_new();
+            if (regulars.length > 0) { const wsReg = XLSX.utils.json_to_sheet(regulars); XLSX.utils.book_append_sheet(wb, wsReg, "Alumnos Regulares"); }
+            if (libres.length > 0) { const wsLib = XLSX.utils.json_to_sheet(libres); XLSX.utils.book_append_sheet(wb, wsLib, "Alumnos Libres"); }
             XLSX.writeFile(wb, "Reporte_Final_Nivel1.xlsx");
         });
     </script>
