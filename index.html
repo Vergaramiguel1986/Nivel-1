@@ -95,12 +95,13 @@
                 <div id="area-impresion-pdf" class="w-full bg-white">
                     <h2 class="text-lg font-bold text-slate-800 mb-1">Planilla en Tiempo Real (Nivel 1)</h2>
                     
-                                        <div class="flex flex-wrap gap-2 my-4 download-actions">
+                    <div class="flex flex-wrap gap-2 my-4 download-actions">
                         <button class="bg-[#1f7244] text-white font-bold py-2 px-3 rounded-lg text-xs" id="btn-excel">🟢 Todo (Excel)</button>
                         <button class="bg-[#c0392b] text-white font-bold py-2 px-3 rounded-lg text-xs" id="btn-pdf">🔴 Reporte PDF</button>
                         <button class="bg-[#8e44ad] text-white font-bold py-2 px-3 rounded-lg text-xs" id="btn-faltas">📊 Separar por Faltas (Excel)</button>
-                        </div>
-<div class="overflow-x-auto rounded-xl border border-slate-100">
+                    </div>
+
+                    <div class="overflow-x-auto rounded-xl border border-slate-100">
                         <table class="w-full text-left border-collapse text-xs">
                             <thead>
                                 <tr class="bg-slate-50 border-b border-slate-200 font-bold uppercase text-slate-600">
@@ -120,7 +121,7 @@
     </div>
 
     <script>
-        // --- ⚠️ REEMPLAZÁ ACÁ TU URL DE EXEC DE GOOGLE SHEETS ---
+        // --- URL DE EXEC DE GOOGLE SHEETS ---
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyU131QEp0Ihv1uergOh0iOyLjB3OYddweU7mF7oDP1mUh3Qq7aTKNv9LPg4EupQg_e/exec";
 
         let alumnos = [];
@@ -173,7 +174,7 @@
         // Verificación de días y horarios requeridos
         function verificarHorarioValido() {
             const ahora = new Date();
-            const diaSemana = ahora.getDay(); 
+            const diaSemana = accessed = ahora.getDay(); 
             const horaActual = ahora.getHours() + (ahora.getMinutes() / 60);
 
             if (diaSemana === 0) { // Domingo
@@ -304,18 +305,18 @@
             tbody.innerHTML = "";
             
             // ---------------------------------------------------------
-            // NUEVO ORDENAMIENTO DE DOBLE CRITERIO INTEGRADO (LÍNEAS 264-282)
+            // CORRECCIÓN FIJA: ORDENAR DE MENOR A MAYOR FALTAS, Y LUEGO ALFABÉTICO
             // ---------------------------------------------------------
             alumnos.sort((a, b) => {
                 const faltasA = parseInt(a.faltas) || 0;
                 const faltasB = parseInt(b.faltas) || 0;
 
-                // 1º Criterio: Ordenar por cantidad de faltas (Menor a Mayor)
+                // 1º Criterio: Si las faltas son distintas, van de menos a más
                 if (faltasA !== faltasB) {
                     return faltasA - faltasB;
                 }
 
-                // 2º Criterio: Si tienen las mismas faltas, ordena alfabéticamente por Apellido
+                // 2º Criterio: Si empatan en faltas, desempata el abecedario por Apellido
                 return a.apellido.localeCompare(b.apellido);
             });
             // ---------------------------------------------------------
@@ -427,12 +428,12 @@
 
         // SCRIPT PARA SEPARAR REGULARES Y LIBRES EN PESTAÑAS (BOTÓN MORADO)
         document.getElementById('btn-faltas').addEventListener('click', () => {
-            const regulares = alumnos.filter(a => a.faltas < 4);
+            const regulars = alumnos.filter(a => a.faltas < 4);
             const libres = alumnos.filter(a => a.faltas >= 4);
             const wb = XLSX.utils.book_new();
             
-            if (regulares.length > 0) {
-                const wsReg = XLSX.utils.json_to_sheet(regulares);
+            if (regulars.length > 0) {
+                const wsReg = XLSX.utils.json_to_sheet(regulars);
                 XLSX.utils.book_append_sheet(wb, wsReg, "Alumnos Regulares");
             }
             if (libres.length > 0) {
@@ -441,8 +442,6 @@
             }
             XLSX.writeFile(wb, "Reporte_Final_Nivel1.xlsx");
         });
-                                
-
     </script>
 </body>
 </html>
